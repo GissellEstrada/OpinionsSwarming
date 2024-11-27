@@ -105,7 +105,7 @@ plot(1:M,w);
 
 % -------------------PROBLEM-RELATED FUNCTIONS------------------- %
 
-function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
+function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, taur, taub)
     N = NL;
     l = x(1:NL,:);
     v = x(N+1:(N+NL),:);
@@ -119,23 +119,23 @@ function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
 
     term1     = 1/N*sumU(l, NL,dU);
     term2     = (alpha - beta*sum(v.^2,2)).*v;
-    termLeft  = tauL*computeOpinionAlignmentPreference(v,wu,rw,vL,wL);
-    termRight = tauR*computeOpinionAlignmentPreference(v,wu,rw,vR,wR);
+    termLeft  = taur*Op_align(v,wu,rw,vL,wL);
+    termRight = taub*Op_align(v,wu,rw,vR,wR);
 
     dv = term1 + term2 + termLeft + termRight;
     dx = [v; dv];
 
     phi = computeOpinionAligment(l, wu, NL, rx, rw);
-    dw = phi + tauL*(wL - wu) + tauR*(wR - wu);
+    dw = phi + taur*(wL - wu) + taub*(wR - wu);
        
 end
 
-function phi = computeOpinionAligment(x,w,N,rx,rw)
-    phi = zeros(size(x, 1), 1); 
-    for i = 1:size(phi, 1)
+function sumOP = computeOpinionAligment(x,w,N,rx,rw)
+    sumOP = zeros(size(x, 1), 1); 
+    for i = 1:size(sumOP, 1)
         for j = 1:N
             if abs(w(i) - w(j)) < rw && norm(x(i,:)-x(j,:)) < rx 
-            phi(i) = phi(i) +  (w(i) - w(j));
+            sumOP(i) = sumOP(i) +  (w(i) - w(j));
             end
         end
     end
@@ -159,7 +159,7 @@ function morsepotential = morsepotential(r, Cr, Ca, lr, la)
     morsepotential = -(Cr/lr)*exp(-r./lr) + (Ca/la)*exp(-r./la);
 end
 
-function Op_align = computeOpinionAlignmentPreference(v,w1,rw,vt,wt)
+function Op_align = Op_align(v,w1,rw,vt,wt)
     isAligned = abs(w1 - wt) < rw;
     Op_align = isAligned.*(vt-v);
 end
