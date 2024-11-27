@@ -1,6 +1,6 @@
 clear all;
 close all;
-format long
+
 
 %-------------------READ ME-----------------------%
 
