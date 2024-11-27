@@ -1,5 +1,5 @@
 clear all;
-close all
+close all;
 format long
 
 %-------------------READ ME-----------------------%
@@ -110,7 +110,7 @@ function [Fx,Fw] = F(x, w, NL, alpha, beta, Cr, Ca, lr, la, rx, rw, taur, taub)
     wu = w;
     Fx = [v; ...
           1/N*sumU(l, NL, Cr, Ca, lr, la) + (alpha - beta*sum(v.^2,2)).*v ...
-          + taur*Op_alignLeft(l,v,wu,NL,rw) + taub*Op_alignRight(l,v,wu,NL,rw)];
+          + taur*Op_alignLeft(v,wu,rw) + taub*Op_alignRight(v,wu,rw)];
     Fw = sumOP(l, wu, NL, rx, rw) + taur*(-1 - wu) + taub*(1 - wu);
        
 end
@@ -142,42 +142,16 @@ function morsepotential = morsepotential(r, Cr, Ca, lr, la)
 end
 
 
-function isAligned = Op_alignLeft(x,v,w1,N1,rw)
+function isAligned = Op_alignLeft(v,w1,rw)
     vr = -1;
     wr = -1;
-    % Op_alignLeft = zeros(size(x, 1), 1); 
-    % for i = 1:size(Op_alignLeft, 1)
-    %     for j = 1:N1
-    %         if abs(w1(j) - wr) < rw 
-    %         Op_alignLeft(i) = Op_alignLeft(i) + (vr - v(i));
-    %         end
-    %     end
-    % end
-
-    %isAligned = abs(w1 - wr) < rw;
-    %Op_alignLeft = isAligned.*(vr-v);
-
     isAligned = Op_align(v,w1,rw,vr,wr);
-    %norm(opAligned - Op_alignLeft)
 end
 
-function isAligned = Op_alignRight(x,v,w1,N1,rw)
+function isAligned = Op_alignRight(v,w1,rw)
     vb = 1;
     wb = 1;
-    % Op_alignRight = zeros(size(x, 1), 1); 
-    % for i = 1:size(Op_alignRight, 1)
-    %     for j = 1:N1
-    %         if abs(wb - w1(j)) < rw 
-    %         Op_alignRight(i) = Op_alignRight(i) +  (vb - v(i));
-    %         end
-    %     end
-    % end
-
-    %isAligned = abs(wb - w1) < rw;
-    %Op_alignRight = isAligned.*(vb-v);
-
     isAligned = Op_align(v,w1,rw,vb,wb);
-
 end
 
 function Op_align = Op_align(v,w1,rw,vt,wt)
