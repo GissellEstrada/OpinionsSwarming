@@ -117,7 +117,9 @@ function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
     vL = -1;
     wL = -1;    
 
-    term1     = 1/N*sumU(l, NL,dU);
+    
+
+    term1     = 1/N*computePotentialTerm(l,dU);
     term2     = (alpha - beta*sum(v.^2,2)).*v;
     termLeft  = tauL*computeOpinionAlignmentPreference(v,wu,rw,vL,wL);
     termRight = tauR*computeOpinionAlignmentPreference(v,wu,rw,vR,wR);
@@ -131,28 +133,24 @@ function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
 end
 
 function phi = computeOpinionAligment(x,w,N,rx,rw)
-    phi = zeros(size(x, 1), 1); 
-    for i = 1:size(phi, 1)
-        for j = 1:N
-            if abs(w(i) - w(j)) < rw && norm(x(i,:)-x(j,:)) < rx 
-            phi(i) = phi(i) +  (w(i) - w(j));
-            end
-        end
-    end
+    wi = repmat(w, 1, N);
+    wj = repmat(w', N, 1);    
+    xi = reshape(x, [N, 1, size(x, 2)]);
+    xj = reshape(x, [1, N, size(x, 2)]);
+    incXij  = xi - xj;
+    distWij = sqrt(sum((incXij).^2, 3));   
+    isClosed = (abs(wi - wj) < rw) & (distWij < rx);    
+    phi      = sum(isClosed .* (wi - wj), 2);
 end
 
-function sumU = sumU(x, N,dU)
-    sumU = zeros(size(x, 1), size(x, 2));     
-    for i = 1:size(sumU, 1)
-        for j = 1:N
-            if j ~= i
-                incXiXj  = x(i,:) - x(j,:);
-                normXiXj = norm(incXiXj,2);
-                dUij     = dU(normXiXj);
-                sumU(i,:) = sumU(i,:) -  dUij.* (incXiXj) ./ normXiXj ;
-            end
-        end
-    end
+function forces = computePotentialTerm(x,dU)
+    xi = x;
+    xj = reshape(x', 1, size(x, 2), []); 
+    incXiXj = xi - xj; 
+    distXiXj = sqrt(sum(incXiXj.^2, 2));
+    distXiXj(distXiXj == 0) = 1;
+    forces = -dU(distXiXj) .* incXiXj ./ distXiXj;
+    forces = squeeze(sum(forces, 3));    
 end
 
 function morsepotential = morsepotential(r, Cr, Ca, lr, la)
