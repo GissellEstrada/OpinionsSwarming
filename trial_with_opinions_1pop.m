@@ -19,17 +19,34 @@ close all;
 %----------------------------------------------%
 
 % Problem data
-NL = 60;                             % number of individuals from each group (change the number N to get different dynamics)
-%Ca = 1; la = 1; Cr = 0.5; lr = 0.5; % attraction-repulsion parameters
-Ca = 1; la = 1; Cr = 0.6; lr = 0.5;
-T = 30;                             % final time
+NL = 150;                             % number of individuals from each group (change the number N to get different dynamics)
+%%
+alpha = 1; beta = 0.5;                        % friction parameters
+Ca = 100; la = 1; Cr = 60; lr = 0.5;          % clusters moving in opposite direction (rotating)
+%Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
+%Ca = 100; la = 1; Cr = 40; lr = 6;            % compact clusters moving in the same direction (rotating)
+%Ca = 100; la = 1; Cr = 50; lr = 1.2;          % compact clusters moving in the same direction (rotating)
+%Ca = 100; la = 1; Cr = 50; lr = 1.2;
+%Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
+%Ca = 100; la = 1; Cr = 60; lr = 0.7;          % (small) clusters moving in opposite direction (rotating)
+%%
+% alpha = 0.1; beta = 5;
+% Ca = 100; la = 1.2; Cr = 350; lr = 0.8;       % all moving in the same direction as a flock
+
+%%
+% alpha = 1; beta = 5;
+% Ca = 100; la = 1.2; Cr = 350; lr = 0.8;
+
+%%
+
+T = 100;                             % final time
 dt = 1.0e-2;                        % timestep
 M = floor(T/dt);                    % number of time steps
-alpha = 1; beta = 0.5;              % friction parameters
+
 N = NL;                   % total number of individuals
 rx = 0.05;                             % spatial radius for alignment in velocity
 rw = 0.05;                           % preference radius for alignment il velocity
-taur = 0.05;                         % strenght of preference towards 1
+taur = 0;                         % strenght of preference towards 1
 taub = 0;                        % strenght of preference towards -1
 
 %% Changing taur and taub gives very rich dynamics
@@ -40,7 +57,7 @@ w0L = -1 + 2*rand(NL,1);
 
 x0 = x0L;
 v0 = v0L;
-w0 = w0L;
+w0 = 0*w0L;
 
 dU = @(r) morsepotential(r, Cr, Ca, lr, la);
 
@@ -70,38 +87,120 @@ for i = 3:M
     end
 end
 
-% figure;
-% hold on;
-% for i = 1:N
-%    plot(squeeze(x(i, 1, 5996:5999)),  squeeze(x(i, 2, 5996:5999)), 'r'); 
-% end
-% hold on
-% 
-% for i = 1:N
-%    plot(squeeze(x(i, 1, 5999:end)),  squeeze(x(i, 2, 5999:end)), 'b');
-% end
 
-% Plot solution at last instant in time
-%  figure();
-% 
-% % % plots uninformed (preference towards -1) in red and leaders and followers
-% % % (preference towards 1) in blue
-quiver(x(1:N,1,end),x(1:N,2,end),x(N+1:N+N,1,end),x(N+1:N+N,2,end),'r');
+%% Save figure
 
+outputFolder = 'Figures';      % Folder to save the figures
+% Create the folder if it doesn't exist
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
+
+
+%% Plot of the final velocity configuration
 figure()
-quiver(x(1:N,1,:),x(1:N,2,:),x(N+1:N+N,1,:),x(N+1:N+N,2,:),'r');
-% quiver(x(N+1:N,1,end),x(N+1:N,2,end),x(N+N+1:end,1,end),x(N+N+1:end,2,end),'b');
+plot(x(1:N,1,end), x(1:N,2,end), 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'none');  % Plot positions as circles
+hold on;
 
-figure ()
-quiver(x(1:N,1,end),x(1:N,2,end),x(1:N,1,end),x(1:N,2,end));
-xlabel('x');
-ylabel('y');
-title('Trajectories of Agents in Cucker-Smale System with Morse Potential');
+quiver(x(1:N,1,end), x(1:N,2,end), x(N+1:2*N,1,end), x(N+1:2*N,2,end), 'r'); % Plot velocities as arrows
+
+xlabel('X');
+ylabel('Y');
+
 grid on;
+title('Velocities at the final time');
+
+hold off;
+axis equal;
+filename1 = fullfile(outputFolder, ['NoOpFinalVelocity_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+saveas(gcf, filename1);
+
+%% Plot for several times
+
+% Parameters
+time = (1:1000:size(x, 3)); % Time indices corresponding to the 1:1000:end sampling
+
+% Prepare figure
+figure;
+
+% Plot positions as circles in 3D space
+for tIdx = 1:length(time)
+    t = time(tIdx); % Current time index
+    plot3(x(1:N,1,t), x(1:N,2,t), t * ones(N,1), 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'none');
+    hold on;
+end
+
+% Plot velocities as arrows in 3D space
+for tIdx = 1:length(time)
+    t = time(tIdx); % Current time index
+    quiver3(x(1:N,1,t), x(1:N,2,t), t * ones(N,1), ...
+            x(N+1:2*N,1,t), x(N+1:2*N,2,t), zeros(N,1), 'r');
+end
+
+% Label axes
+xlabel('X');
+ylabel('Y');
+zlabel('Time');
+
+% Adjust plot appearance
+grid on;
+%axis equal;
+title('Velocities Over Time');
+view(3); % Use a 3D perspective
 hold off;
 
-figure();
-plot(1:M,w);
+filename2 = fullfile(outputFolder, ['NoOpVelocityOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+saveas(gcf, filename2);
+
+
+%% Plot of the trajectories for some times
+
+% Parameters
+time = (1:1000:size(x, 3)); % Time indices corresponding to the 1:1000:end sampling
+
+% Prepare figure
+figure;
+
+% Plot positions as circles in 3D space
+for tIdx = 1:length(time)
+    t = time(tIdx); % Current time index
+    plot3(x(1:N,1,t), x(1:N,2,t), t * ones(N,1), 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'none');
+    hold on;
+end
+
+% Plot velocities as arrows in 3D space
+for tIdx = 1:length(time)
+    t = time(tIdx); % Current time index
+    quiver3(x(1:N,1,t), x(1:N,2,t), t * ones(N,1), ...
+            x(1:N,1,t), x(1:N,2,t), zeros(N,1), 'r');
+end
+
+% Label axes
+xlabel('X');
+ylabel('Y');
+zlabel('Time');
+
+% Adjust plot appearance
+grid on;
+%axis equal;
+title('Position Over Time');
+view(3); % Use a 3D perspective
+hold off;
+
+filename3 = fullfile(outputFolder, ['NoOpPositionOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+saveas(gcf, filename3);
+
+ %%
+
+% figure();
+% plot(1:M,w, 'k');
+% xlabel('Time');
+% ylabel('Opinion');
+% title('Opinion Over Time');
+% 
+% filename4 = fullfile(outputFolder, ['OpinionOverTime_', num2str(params), '.fig']);
+% saveas(gcf, filename3);
+
 
 % -------------------PROBLEM-RELATED FUNCTIONS------------------- %
 
@@ -115,11 +214,9 @@ function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
     wR = 1;    
 
     vL = -1;
-    wL = -1;    
+    wL = -1;   
 
-    
-
-    term1     = 1/N*computePotentialTerm(l,dU);
+    term1     = 1/N*computePotentialTerm(l,dU); % there is 1/N still missing here
     term2     = (alpha - beta*sum(v.^2,2)).*v;
     termLeft  = tauL*computeOpinionAlignmentPreference(v,wu,rw,vL,wL);
     termRight = tauR*computeOpinionAlignmentPreference(v,wu,rw,vR,wR);
@@ -128,7 +225,7 @@ function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
     dx = [v; dv];
 
     phi = computeOpinionAligment(l, wu, NL, rx, rw);
-    dw = phi + tauL*(wL - wu) + tauR*(wR - wu);
+    dw = 1/N*phi + tauL*(wL - wu) + tauR*(wR - wu); % notice the 1/N here
        
 end
 
