@@ -1,4 +1,4 @@
-
+function DelayedCS
     %% Parameters
     N = 5;               % Number of agents
     beta = 0.1;            % Decay rate for communication
@@ -14,18 +14,19 @@
     Ca = 1; la = 1; Cr = 1; lr = 0.5;
     rng(0);              % Seed for reproducibility
 
+    nDim = 3;
     %% Initial Conditions
-    x0 = rand(3, N);     % Initial positions (3D)
-    v0 = rand(3, N);     % Initial velocities (3D)
+    x0 = rand(nDim, N);     % Initial positions (3D)
+    v0 = rand(nDim, N);     % Initial velocities (3D)
     z0 = [x0(:); v0(:)]; % Flattened initial state vector
 
+    f = @(t, z) swarmingEquation(t, z, N, beta, tau_max, dt, phi, Ca, la, Cr, lr);
+
     %% Solve ODE
-    [t, z] = ode45(@(t, z) odesystem_with_morse(t, z, N, beta, tau_max, dt, phi, Ca, la, Cr, lr), [0 t_final], z0);
+    [t, z] = ode45(f, [0 t_final], z0);
 
     %% Post-process and Plot Results
-    x = reshape(z(:, 1:3*N)', [3, N, length(t)]);       % Extract positions (3D)
-    v = reshape(z(:, 3*N+1:end)', [3, N, length(t)]);   % Extract velocities (3D)
-
+    [x,v] = obtainDisplacementAndVelocity(z,t,nDim,N);
 
 %     % Plot Position Magnitude vs Time
 %     figure;
@@ -136,10 +137,19 @@
     %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
     grid on;
     hold off;
+
+
+end
+
+
+function [x,v] = obtainDisplacementAndVelocity(z,t,nDim,N)
+x = reshape(z(:, 1:3*N)', [nDim, N, length(t)]);       % Extract positions (3D)
+v = reshape(z(:, 3*N+1:end)', [3, N, length(t)]);   % Extract velocities (3D)
+end
   
 
 %% System of ODEs with Morse Potential
-function dzdt = odesystem_with_morse(t, z, N, beta, tau_max, dt, phi, Ca, la, Cr, lr)
+function dzdt = swarmingEquation(t, z, N, beta, tau_max, dt, phi, Ca, la, Cr, lr)
     % Extract Positions and Velocities
     x = reshape(z(1:3*N), [3, N]);   % Positions (3D)
     v = reshape(z(3*N+1:end), [3, N]); % Velocities (3D)
