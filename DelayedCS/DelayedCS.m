@@ -143,11 +143,15 @@ end
 
 
 function [x,v] = obtainDisplacementAndVelocity(z,t,nDim,N)
-x = reshape(z(:, 1:nDim*N)', [nDim, N, length(t)]);       % Extract positions (3D)
-v = reshape(z(:, nDim*N+1:end)', [nDim, N, length(t)]);   % Extract velocities (3D)
+tL = 1;%length(t)
+x = reshape(z(:, 1:nDim*N)', [nDim, N, tL]);       % Extract positions (3D)
+v = reshape(z(:, nDim*N+1:end)', [nDim, N, tL]);   % Extract velocities (3D)
 end
-  
 
+function H = alignmentPotential(x_i_tau,x_j_tau,beta)
+d = norm(x_i_tau - x_j_tau)^2;
+H = 1 / (1 + d)^beta;
+end
 
 %% System of ODEs with Morse Potential
 function dzdt = swarmingEquation(t, z, N, nDim,beta, tau_max, dt, phi, Ca, la, Cr, lr)
@@ -163,28 +167,26 @@ function dzdt = swarmingEquation(t, z, N, nDim,beta, tau_max, dt, phi, Ca, la, C
         for j = 1:N
             if i ~= j
                 % Trapezoidal rule for the integral
-                tau_values = 0:dt:tau_max; % Discretize tau
+                tau_values = 0:dt:t; % Discretize tau
                 integral_term = zeros(3, 1); % Initialize integral
                 for k = 1:length(tau_values)
                     tau = tau_values(k);
 
                     % Past positions and velocities
-                    x_i_tau = delayed_state(t - tau, z, N, i, 'x');
-                    x_j_tau = delayed_state(t - tau, z, N, j, 'x');
-                    v_i_tau = delayed_state(t - tau, z, N, i, 'v');
-                    v_j_tau = delayed_state(t - tau, z, N, j, 'v');
+                  
+                    [x2,v2] = obtainDisplacementAndVelocity(z',t-tau,nDim,N);
+                        
+                    x_i_tau = x2(:,i);
+                    x_j_tau = x2(:,j);
 
-%                     x_i_tau = delayed_state(t, z, N, i, 'x');
-%                     x_j_tau = delayed_state(t, z, N, j, 'x');
-%                     v_i_tau = delayed_state(t, z, N, i, 'v');
-%                     v_j_tau = delayed_state(t, z, N, j, 'v');
+                    v_i_tau = v2(:,i);
+                    v_j_tau = v2(:,j);
 
                     % Compute Communication Rate H
-                    d = norm(x_i_tau - x_j_tau)^2;
-                    H = 1 / (1 + d)^beta;
+                    H = alignmentPotential(x_i_tau,x_j_tau,beta);
 
                     % Compute the integrand
-                    integrand = phi(tau) * H * (v_j_tau - v_i_tau);
+                    integrand = phi(tau)*H*(v_j_tau - v_i_tau);
 
                     % Apply Trapezoidal Rule Weight
                     if k == 1 || k == length(tau_values)
@@ -217,7 +219,7 @@ function dzdt = swarmingEquation(t, z, N, nDim,beta, tau_max, dt, phi, Ca, la, C
 end
 
 %% Delayed State Function
-function delayed_state = delayed_state(tau, z, N, agent_idx, var_type)
+function delayed_state = delayedState(tau, z, N, agent_idx, var_type)
     if tau < 0
         delayed_state = zeros(3, 1); % If time is in the past, return zeros
         return;
