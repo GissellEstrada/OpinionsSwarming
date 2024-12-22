@@ -19,52 +19,40 @@ close all;
 %----------------------------------------------%
 
 % Problem data
-NL = 10;                             % number of individuals from each group (change the number N to get different dynamics)
-NF = 50;
-NU = 40;
+NL = 20;                             % number of individuals from each group (change the number N to get different dynamics)
+NF = 100;
+NU = 50;                             % we need to chenge NU=2, 20, 80
 
 N = NL + NF + NU;
 %%
 alpha = 1; beta = 0.5;                        % friction parameters
 %Ca = 100; la = 1; Cr = 60; lr = 0.5;          % clusters moving in opposite direction (rotating)
-Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
-%Ca = 100; la = 1; Cr = 40; lr = 6;            % compact clusters moving in the same direction (rotating)
-%Ca = 100; la = 1; Cr = 50; lr = 1.2;          % compact clusters moving in the same direction (rotating)
+%Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
 %Ca = 100; la = 1; Cr = 50; lr = 1.2;
-%Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
-%Ca = 100; la = 1; Cr = 60; lr = 0.7;          % (small) clusters moving in opposite direction (rotating)
-%%
-% alpha = 0.1; beta = 5;
-% Ca = 100; la = 1.2; Cr = 350; lr = 0.8;       % all moving in the same direction as a flock
+Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
+
 
 %%
-% alpha = 1; beta = 5;
-% Ca = 100; la = 1.2; Cr = 350; lr = 0.8;
-
-%%
-
 T = 100;                             % final time
 dt = 1.0e-2;                        % timestep
 M = floor(T/dt);                    % number of time steps
 
-%N = NL;                   % total number of individuals
-rx = 0.05;                             % spatial radius for alignment in velocity
+rx = 1;                             % spatial radius for alignment in velocity
 rw = 0.5;                           % preference radius for alignment il velocity
 
-%% R: preference towards 1, L: preference towards -1
+%% R: preference towards 1 (leaders), L: preference towards -1 (followers)
 
 %If we change from 0.3 to 0.4 the trajectories collapse to one point
-tauL_L = 0.2;
-tauF_L = 0.2;
-tauF_R = 0.2;
-tauU_L = 0;
-tauU_R = 0;
+gammaL_left = 1;
+gammaL_right = 1;
+tauL_right = 0.2;
 
-tauOpL = 0.1;
-tauOpF_L = 0;
-tauOpF_R = 0.01;
-tauOpU_L = 0;
-tauOpU_R = 0;
+gammaF_right = 1;
+gammaF_left = 1;
+tauF_left = 0.02;
+
+gammaU_left = 0;
+gammaU_right = 0;
 
 
 %% Changing taur and taub gives very rich dynamics
@@ -77,7 +65,8 @@ x0F = -1 + 2*rand(NF,2); v0F = -1 + 2*rand(NF,2);
 w0F = -1 + 2*rand(NF,1);
 
 x0U = -1 + 2*rand(NU,2); v0U = -1 + 2*rand(NU,2);
-w0U = -1 + 2*rand(NU,1);
+w0U = -0.1 + 0.2*rand(NU,1);
+%w0U = -1 + 2*rand(NU,1);
 
 x0 = [x0L;x0F;x0U];
 v0 = [v0L;v0F;v0U];
@@ -89,13 +78,13 @@ dU = @(r) morsepotential(r, Cr, Ca, lr, la);
 x = zeros(2*N,2,M);
 x(:,:,1) = [x0;v0]; % Initial state
 w(:,1) = w0;
-[F1x, F1w] = F(x(:,:,1), w(:,1), NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R); % Initial F value
+[F1x, F1w] = F(x(:,:,1), w(:,1), NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_left, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right); % Initial F value
 
 % Use Euler for the first step
 x(:,:,2) = x(:,:,1) + dt * F1x; 
 w(:,2) = w(:,1) + dt * F1w; 
 % Compute F for the second step (needed for Adams-Bashforth)
-[F2x, F2w] = F(x(:,:,2), w(:,2), NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R);
+[F2x, F2w] = F(x(:,:,2), w(:,2), NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_left, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right);
 
 % Adams-Bashforth 2-step method
 for i = 3:M
@@ -105,7 +94,7 @@ for i = 3:M
     % Update F values for the next step
     F1x = F2x;  % F from previous step
     F1w = F2w;
-    [F2x, F2w] = F(x(:,:,i), w(:,i), NL, NF, NU, alpha, beta,dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R);  % F for current step
+    [F2x, F2w] = F(x(:,:,i), w(:,i), NL, NF, NU, alpha, beta,dU, rx, rw, gammaL_left, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right);  % F for current step
     if any(isnan(x(:,:,i)), 'all') || any(isinf(x(:,:,i)), 'all')
         error('NaN or Inf encountered at time step %d', i);
     end
@@ -114,7 +103,7 @@ end
 
 %% Save figure
 
-outputFolder = 'Figures';      % Folder to save the figures
+outputFolder = 'Figures_3pop';      % Folder to save the figures
 % Create the folder if it doesn't exist
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
@@ -138,9 +127,10 @@ grid on;
 title('Velocities at the final time');
 
 hold off;
-axis equal;
-% filename1 = fullfile(outputFolder, ['NoOpFinalVelocity_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(tauR),'_taub_',num2str(tauL), '.fig']);
-% saveas(gcf, filename1);
+axis equal; fontsize(gca, 15,'points');
+
+filename1 = fullfile(outputFolder, '3Population_finalVel_FLU2.fig');
+saveas(gcf, filename1);
 
 %% Plot for several times
 
@@ -177,9 +167,9 @@ grid on;
 %axis equal;
 title('Velocities Over Time');
 view(3); % Use a 3D perspective
-hold off;
+hold off; fontsize(gca, 15,'points');
 
-% filename2 = fullfile(outputFolder, ['NoOpVelocityOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(tauR),'_taub_',num2str(tauL), '.fig']);
+% filename2 = fullfile(outputFolder, '3PopulationVelocOverTime_FLU3.fig');
 % saveas(gcf, filename2);
 
 
@@ -215,28 +205,109 @@ grid on;
 %axis equal;
 title('Position Over Time');
 view(3); % Use a 3D perspective
-hold off;
+hold off; fontsize(gca, 15,'points');
 
-% filename3 = fullfile(outputFolder, ['NoOpPositionOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(tauR),'_taub_',num2str(tauL), '.fig']);
+% filename3 = fullfile(outputFolder, '3PopulationPositOverTime_FLU3.fig');
 % saveas(gcf, filename3);
 
  %%
 
+
 figure();
-plot(1:M,w(1:NL,:), 'b'); hold on
-plot(1:M,w(NL+1:NL+NF,:),'r'); hold on
-plot(1:M,w(NL+NF+1:end,:),'k')
+plot(1:M,w(1:NL,:), 'b', 'LineWidth', 1.5); hold on
+plot(1:M,w(NL+1:NL+NF,:),'r', 'LineWidth', 1.5); hold on
+plot(1:M,w(NL+NF+1:end,:),'k', 'LineWidth', 1.5)
 xlabel('Time');
 ylabel('Opinion');
-title('Opinion Over Time');
+title('Opinion Over Time'); fontsize(gca, 15,'points');
 
-% filename4 = fullfile(outputFolder, ['OpinionOverTime_', num2str(params), '.fig']);
-% saveas(gcf, filename3);
+% filename4 = fullfile(outputFolder, 'OpinionOverTime_FLU3.fig');
+% saveas(gcf, filename4);
+
+
+
+% Get the total number of time steps
+num_time_steps = size(x, 3);
+
+% Initialize arrays to store mean velocities
+mean_vx_time = zeros(1, num_time_steps);
+mean_vy_time = zeros(1, num_time_steps);
+
+% Loop through each time step to calculate the mean velocity components
+for t = 1:num_time_steps
+    vx = x(N+1:2*N, 1, t); % x-component of velocity at time t
+    vy = x(N+1:2*N, 2, t); % y-component of velocity at time t
+    
+    mean_vx_time(t) = mean(vx); % Mean x-component
+    mean_vy_time(t) = mean(vy); % Mean y-component
+end
+
+% Time vector
+time = 1:num_time_steps; % Modify if you have actual time values
+
+% Plot mean velocity components over time
+figure;
+
+subplot(2, 1, 1);
+plot(time, mean_vx_time, 'b-', 'LineWidth', 2);
+xlabel('Time');
+ylabel('Mean V_x');
+title('Mean Velocity Component V_x Over Time');
+grid on; fontsize(gca, 15,'points');
+
+subplot(2, 1, 2);
+plot(time, mean_vy_time, 'r-', 'LineWidth', 2);
+xlabel('Time');
+ylabel('Mean V_y');
+title('Mean Velocity Component V_y Over Time');
+grid on; fontsize(gca, 15,'points');
+
+filename5 = fullfile(outputFolder, 'VelocityComponents_FLU2.fig');
+saveas(gcf, filename5);
+
+
+figure();
+ for t = 1:num_time_steps
+    wmean = w(1:N, t); % x-component of velocity at time t
+    mean_opinion(t) = mean(wmean); % Mean x-component
+ end
+ plot(time,mean_opinion, 'b', 'LineWidth', 1.5); hold on
+xlabel('Time');
+ylabel('Mean Opnion');
+title('Mean opinion of the whole population');
+grid on; fontsize(gca, 15,'points');
+
+filename6 = fullfile(outputFolder, 'MeanOpinion_FLU2.fig');
+saveas(gcf, filename6);
+
+
+% Combine velocity components into magnitude (optional)
+figure;
+mean_velocity_other = (mean_vx_time + mean_vy_time)/2;
+plot(time, mean_velocity_other, 'k-', 'LineWidth', 2);
+xlabel('Time');
+ylabel('Mean Velocity');
+title('Mean Velocity Over Time');
+grid on; fontsize(gca, 15,'points');
+
+filename7 = fullfile(outputFolder, 'MeanVelocityOther_FLU2.fig');
+saveas(gcf, filename7);
+
+figure;
+mean_velocity_magnitude = sqrt(mean_vx_time.^2 + mean_vy_time.^2);
+plot(time, mean_velocity_magnitude, 'k-', 'LineWidth', 2);
+xlabel('Time');
+ylabel('Mean Velocity Magnitude');
+title('Mean Velocity Magnitude Over Time');
+grid on; fontsize(gca, 15,'points');
+
+filename8 = fullfile(outputFolder, 'MeanVelocityMagnitude_FLU2.fig');
+saveas(gcf, filename8);
 
 
 % -------------------PROBLEM-RELATED FUNCTIONS------------------- %
 
-function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R)
+function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_left, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right)
 
     N = NL + NF + NU;
 
@@ -275,36 +346,37 @@ function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L,
     term2_F     = (alpha - beta*sum(vF.^2,2)).*vF;
     term2_U     = (alpha - beta*sum(vU.^2,2)).*vU;
 
-    termLeft_L  = tauL_L*computeOpinionAlignmentPreference(vL,wL,rw,vLeft,wLeft);
+    termRight_L  = gammaL_right * computeOpinionAlignmentPreference(vL,wL,rw,vRight,wRight);
+    termLeft_L   = gammaL_left * computeOpinionAlignmentPreference(vL,wL,rw,vLeft,wLeft);
 
-    termLeft_F  = tauF_L*computeOpinionAlignmentPreference(vF,wF,rw,vLeft,wLeft);
-    termLeft_U  = tauU_L*computeOpinionAlignmentPreference(vU,wU,rw,vLeft,wLeft);
+    termLeft_F  = gammaF_left * computeOpinionAlignmentPreference(vF,wF,rw,vLeft,wLeft);
+    termRight_F = gammaF_right * computeOpinionAlignmentPreference(vF,wF,rw,vRight,wRight);
 
-    termRight_F = tauF_R*computeOpinionAlignmentPreference(vF,wF,rw,vRight,wRight);
-    termRight_U = tauU_R*computeOpinionAlignmentPreference(vU,wU,rw,vRight,wRight);
+    termLeft_U  = gammaU_left * computeOpinionAlignmentPreference(vU,wU,rw,vLeft,wLeft);
+    termRight_U = gammaU_right * computeOpinionAlignmentPreference(vU,wU,rw,vRight,wRight);
 
-    dvL = term1_LL + term1_LF + term1_LU + term2_L + termLeft_L;
+    dvL = term1_LL + term1_LF + term1_LU + term2_L + termRight_L + termLeft_L; % check if the termLeft_L is needed
     dvF = term1_FF + term1_FL + term1_FU + term2_F + termLeft_F + termRight_F;
     dvU = term1_UU + term1_UL + term1_UF + term2_U + termLeft_U + termRight_U;
 
     dx = [vL; vF; vU; dvL; dvF; dvU];
 
-    phi_LL = 1/NL*computeOpinionAligment(xL, wL, NL, rx, rw);
-    phi_FF = 1/NF*computeOpinionAligment(xF, wF, NF, rx, rw);
-    phi_UU = 1/NU*computeOpinionAligment(xU, wU, NU, rx, rw);
+    phi_LL = 1/NL * computeOpinionAligment(xL, wL, NL, rx, rw);
+    phi_FF = 1/NF * computeOpinionAligment(xF, wF, NF, rx, rw);
+    phi_UU = 1/NU * computeOpinionAligment(xU, wU, NU, rx, rw);
 
-    phi_LF = 1/NF*computeOpinionAlignmentInterSpecie(xL, xF, wL, wF, NL, NF, rx, rw);
-    phi_LU = 1/NU*computeOpinionAlignmentInterSpecie(xL, xU, wL, wU, NL, NU, rx, rw);
+    phi_LF = 1/NF * computeOpinionAlignmentInterSpecie(xL, xF, wL, wF, NL, NF, rx, rw);
+    phi_LU = 1/NU * computeOpinionAlignmentInterSpecie(xL, xU, wL, wU, NL, NU, rx, rw);
 
-    phi_FL = 1/NL*computeOpinionAlignmentInterSpecie(xF, xL, wF, wL, NF, NL, rx, rw);
-    phi_UL = 1/NL*computeOpinionAlignmentInterSpecie(xU, xL, wU, wL, NU, NL, rx, rw);
+    phi_FL = 1/NL * computeOpinionAlignmentInterSpecie(xF, xL, wF, wL, NF, NL, rx, rw);
+    phi_UL = 1/NL * computeOpinionAlignmentInterSpecie(xU, xL, wU, wL, NU, NL, rx, rw);
 
-    phi_FU = 1/NU*computeOpinionAlignmentInterSpecie(xF, xU, wF, wU, NF, NU, rx, rw);
-    phi_UF = 1/NF*computeOpinionAlignmentInterSpecie(xU, xF, wU, wF, NU, NF, rx, rw);
+    phi_FU = 1/NU * computeOpinionAlignmentInterSpecie(xF, xU, wF, wU, NF, NU, rx, rw);
+    phi_UF = 1/NF * computeOpinionAlignmentInterSpecie(xU, xF, wU, wF, NU, NF, rx, rw);
 
-    dwL = phi_LL + phi_LF + 0*phi_LU + tauOpL*(wLeft - wL);
-    dwF = phi_FF + phi_FL + phi_FU + tauOpF_L*(wLeft - wF) + tauOpF_R*(wRight - wF);
-    dwU = 0*phi_UU + 0*phi_UF + 0*phi_UL + 0*tauOpU_L*(wLeft - wU) + 0*tauOpU_R*(wRight - wU);
+    dwL = phi_LL + phi_LF + 0*phi_LU + tauL_right*(wRight - wL);
+    dwF = phi_FF + phi_FL + phi_FU + tauF_left*(wLeft - wF);
+    dwU = 0*phi_UU + 0*phi_UF + 0*phi_UL;
 
     dw = [dwL; dwF; dwU];
 
@@ -318,8 +390,8 @@ function phi = computeOpinionAligment(x,w,N,rx,rw)
     xj = reshape(x, [1, N, size(x, 2)]);
     incXij  = xi - xj;
     distWij = sqrt(sum((incXij).^2, 3));   
-    %isClosed = (abs(wi - wj) < rw) & (distWij < rx); 
-    isClosed = (abs(wi - wj) < rw); 
+    isClosed = (abs(wi - wj) < rw) & (distWij < rx); 
+    %isClosed = (abs(wi - wj) < rw); 
     phi      = sum(isClosed .* (wj - wi), 2);
 end
 
@@ -343,8 +415,8 @@ function phi = computeOpinionAlignmentInterSpecie(x, y, w, q, N, NN, rx, rw)
     distXij = sqrt(sum(incXij.^2, 3)); % Size: (N, NN)
     
     % Identify pairs satisfying both opinion and spatial thresholds
-    %isClosed = (abs(wi - wj) < rw) & (distXij < rx); % Size: (N, NN)
-    isClosed = (abs(wi - wj) < rw); % Size: (N, NN)
+    isClosed = (abs(wi - wj) < rw) & (distXij < rx); % Size: (N, NN)
+    %isClosed = (abs(wi - wj) < rw); % Size: (N, NN)
     
     % Compute the alignment factor
     phi = sum(isClosed .* (wj - wi), 2); % Size: (N, 1)
@@ -393,7 +465,6 @@ function Op_align = computeOpinionAlignmentPreference(v,w1,rw,vt,wt)
     isAligned = abs(w1 - wt) < rw;
     Op_align = isAligned.*(vt-v);
 end
-
 
 
 

@@ -20,51 +20,38 @@ close all;
 
 % Problem data
 NL = 10;                             % number of individuals from each group (change the number N to get different dynamics)
-NF = 60;
-NU = 80;
+NF = 50;
+NU = 40;
 
 N = NL + NF + NU;
 %%
 alpha = 1; beta = 0.5;                        % friction parameters
 %Ca = 100; la = 1; Cr = 60; lr = 0.5;          % clusters moving in opposite direction (rotating)
-%Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
-%Ca = 100; la = 1; Cr = 40; lr = 6;            % compact clusters moving in the same direction (rotating)
-%Ca = 100; la = 1; Cr = 50; lr = 1.2;          % compact clusters moving in the same direction (rotating)
+Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
 %Ca = 100; la = 1; Cr = 50; lr = 1.2;
-Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
-%Ca = 100; la = 1; Cr = 60; lr = 0.7;          % (small) clusters moving in opposite direction (rotating)
-%%
-% alpha = 0.1; beta = 5;
-% Ca = 100; la = 1.2; Cr = 350; lr = 0.8;       % all moving in the same direction as a flock
+%Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
+
 
 %%
-% alpha = 1; beta = 5;
-% Ca = 100; la = 1.2; Cr = 350; lr = 0.8;
-
-%%
-
 T = 100;                             % final time
 dt = 1.0e-2;                        % timestep
 M = floor(T/dt);                    % number of time steps
 
-%N = NL;                   % total number of individuals
 rx = 0.05;                             % spatial radius for alignment in velocity
-rw = 0.8;                           % preference radius for alignment il velocity
+rw = 0.5;                           % preference radius for alignment il velocity
 
-%% R: preference towards 1, L: preference towards -1
+%% R: preference towards 1 (leaders), L: preference towards -1 (followers)
 
 %If we change from 0.3 to 0.4 the trajectories collapse to one point
-tauL_L = 0.3;
-tauF_L = 0.3;
-tauF_R = 0.3;
-tauU_L = 0.3;
-tauU_R = 0.3;
+gammaL_right = 0.2;
+tauL_right = 0.2;
 
-tauOpL = 0.1;
-tauOpF_L = 0;
-tauOpF_R = 0.01;
-tauOpU_L = 0;
-tauOpU_R = 0;
+gammaF_right = 0.2;
+gammaF_left = 0.2;
+tauF_left = 0.02;
+
+gammaU_left = 0.2;
+gammaU_right = 0.2;
 
 
 %% Changing taur and taub gives very rich dynamics
@@ -89,13 +76,13 @@ dU = @(r) morsepotential(r, Cr, Ca, lr, la);
 x = zeros(2*N,2,M);
 x(:,:,1) = [x0;v0]; % Initial state
 w(:,1) = w0;
-[F1x, F1w] = F(x(:,:,1), w(:,1), NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R); % Initial F value
+[F1x, F1w] = F(x(:,:,1), w(:,1), NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right); % Initial F value
 
 % Use Euler for the first step
 x(:,:,2) = x(:,:,1) + dt * F1x; 
 w(:,2) = w(:,1) + dt * F1w; 
 % Compute F for the second step (needed for Adams-Bashforth)
-[F2x, F2w] = F(x(:,:,2), w(:,2), NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R);
+[F2x, F2w] = F(x(:,:,2), w(:,2), NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right);
 
 % Adams-Bashforth 2-step method
 for i = 3:M
@@ -105,7 +92,7 @@ for i = 3:M
     % Update F values for the next step
     F1x = F2x;  % F from previous step
     F1w = F2w;
-    [F2x, F2w] = F(x(:,:,i), w(:,i), NL, NF, NU, alpha, beta,dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R);  % F for current step
+    [F2x, F2w] = F(x(:,:,i), w(:,i), NL, NF, NU, alpha, beta,dU, rx, rw, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right);  % F for current step
     if any(isnan(x(:,:,i)), 'all') || any(isinf(x(:,:,i)), 'all')
         error('NaN or Inf encountered at time step %d', i);
     end
@@ -236,7 +223,7 @@ title('Opinion Over Time');
 
 % -------------------PROBLEM-RELATED FUNCTIONS------------------- %
 
-function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L, tauF_R, tauU_L, tauU_R, tauOpL, tauOpF_L, tauOpF_R, tauOpU_L, tauOpU_R)
+function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_right, tauL_right, gammaF_right, gammaF_left, tauF_left, gammaU_left, gammaU_right)
 
     N = NL + NF + NU;
 
@@ -275,36 +262,36 @@ function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, tauL_L, tauF_L,
     term2_F     = (alpha - beta*sum(vF.^2,2)).*vF;
     term2_U     = (alpha - beta*sum(vU.^2,2)).*vU;
 
-    termLeft_L  = tauL_L*computeOpinionAlignmentPreference(vL,wL,rw,vLeft,wLeft);
+    termRight_L  = gammaL_right * computeOpinionAlignmentPreference(vL,wL,rw,vRight,wRight);
 
-    termLeft_F  = tauF_L*computeOpinionAlignmentPreference(vF,wF,rw,vLeft,wLeft);
-    termLeft_U  = tauU_L*computeOpinionAlignmentPreference(vU,wU,rw,vLeft,wLeft);
+    termLeft_F  = gammaF_left * computeOpinionAlignmentPreference(vF,wF,rw,vLeft,wLeft);
+    termRight_F = gammaF_right * computeOpinionAlignmentPreference(vF,wF,rw,vRight,wRight);
 
-    termRight_F = tauF_R*computeOpinionAlignmentPreference(vF,wF,rw,vRight,wRight);
-    termRight_U = tauU_R*computeOpinionAlignmentPreference(vU,wU,rw,vRight,wRight);
+    termLeft_U  = gammaU_left * computeOpinionAlignmentPreference(vU,wU,rw,vLeft,wLeft);
+    termRight_U = gammaU_right * computeOpinionAlignmentPreference(vU,wU,rw,vRight,wRight);
 
-    dvL = term1_LL + term1_LF + term1_LU + term2_L + termLeft_L;
+    dvL = term1_LL + term1_LF + term1_LU + term2_L + termRight_L;
     dvF = term1_FF + term1_FL + term1_FU + term2_F + termLeft_F + termRight_F;
     dvU = term1_UU + term1_UL + term1_UF + term2_U + termLeft_U + termRight_U;
 
     dx = [vL; vF; vU; dvL; dvF; dvU];
 
-    phi_LL = 1/NL*computeOpinionAligment(xL, wL, NL, rx, rw);
-    phi_FF = 1/NF*computeOpinionAligment(xF, wF, NF, rx, rw);
-    phi_UU = 1/NU*computeOpinionAligment(xU, wU, NU, rx, rw);
+    phi_LL = 1/NL * computeOpinionAligment(xL, wL, NL, rx, rw);
+    phi_FF = 1/NF * computeOpinionAligment(xF, wF, NF, rx, rw);
+    phi_UU = 1/NU * computeOpinionAligment(xU, wU, NU, rx, rw);
 
-    phi_LF = 1/NF*computeOpinionAlignmentInterSpecie(xL, xF, wL, wF, NL, NF, rx, rw);
-    phi_LU = 1/NU*computeOpinionAlignmentInterSpecie(xL, xU, wL, wU, NL, NU, rx, rw);
+    phi_LF = 1/NF * computeOpinionAlignmentInterSpecie(xL, xF, wL, wF, NL, NF, rx, rw);
+    phi_LU = 1/NU * computeOpinionAlignmentInterSpecie(xL, xU, wL, wU, NL, NU, rx, rw);
 
-    phi_FL = 1/NL*computeOpinionAlignmentInterSpecie(xF, xL, wF, wL, NF, NL, rx, rw);
-    phi_UL = 1/NL*computeOpinionAlignmentInterSpecie(xU, xL, wU, wL, NU, NL, rx, rw);
+    phi_FL = 1/NL * computeOpinionAlignmentInterSpecie(xF, xL, wF, wL, NF, NL, rx, rw);
+    phi_UL = 1/NL * computeOpinionAlignmentInterSpecie(xU, xL, wU, wL, NU, NL, rx, rw);
 
-    phi_FU = 1/NU*computeOpinionAlignmentInterSpecie(xF, xU, wF, wU, NF, NU, rx, rw);
-    phi_UF = 1/NF*computeOpinionAlignmentInterSpecie(xU, xF, wU, wF, NU, NF, rx, rw);
+    phi_FU = 1/NU * computeOpinionAlignmentInterSpecie(xF, xU, wF, wU, NF, NU, rx, rw);
+    phi_UF = 1/NF * computeOpinionAlignmentInterSpecie(xU, xF, wU, wF, NU, NF, rx, rw);
 
-    dwL = phi_LL + phi_LF + 0*phi_LU + tauOpL*(wLeft - wL);
-    dwF = phi_FF + phi_FL + 0*phi_FU + tauOpF_L*(wLeft - wF) + tauOpF_R*(wRight - wF);
-    dwU = phi_UU + 0*phi_UF + 0*phi_UL + 0*tauOpU_L*(wLeft - wU) + 0*tauOpU_R*(wRight - wU);
+    dwL = phi_LL + phi_LF + 0*phi_LU + tauL_right*(wRight - wL);
+    dwF = phi_FF + phi_FL + phi_FU + tauF_left*(wLeft - wF);
+    dwU = 0*phi_UU + 0*phi_UF + 0*phi_UL;
 
     dw = [dwL; dwF; dwU];
 
@@ -393,7 +380,3 @@ function Op_align = computeOpinionAlignmentPreference(v,w1,rw,vt,wt)
     isAligned = abs(w1 - wt) < rw;
     Op_align = isAligned.*(vt-v);
 end
-
-
-
-

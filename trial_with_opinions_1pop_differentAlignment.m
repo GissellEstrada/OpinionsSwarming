@@ -22,12 +22,12 @@ close all;
 NL = 150;                             % number of individuals from each group (change the number N to get different dynamics)
 %%
 alpha = 1; beta = 0.5;                        % friction parameters
-%Ca = 100; la = 1; Cr = 60; lr = 0.5;          % clusters moving in opposite direction (rotating)
+Ca = 100; la = 1; Cr = 60; lr = 0.5;          % clusters moving in opposite direction (rotating)
 %Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
 %Ca = 100; la = 1; Cr = 40; lr = 6;            % compact clusters moving in the same direction (rotating)
 %Ca = 100; la = 1; Cr = 50; lr = 1.2;          % compact clusters moving in the same direction (rotating)
 %Ca = 100; la = 1; Cr = 50; lr = 1.2;
-Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
+%Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
 %Ca = 100; la = 1; Cr = 60; lr = 0.7;          % (small) clusters moving in opposite direction (rotating)
 %%
 % alpha = 0.1; beta = 5;
@@ -39,14 +39,14 @@ Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
 
 %%
 
-T = 350;                             % final time
+T = 100;                             % final time
 dt = 1.0e-2;                        % timestep
 M = floor(T/dt);                    % number of time steps
 
 N = NL;                   % total number of individuals
-rx = 0;%0.05;                             % spatial radius for alignment in velocity
-rw = 0;%0.05;                           % preference radius for alignment il velocity
-taur = 0;                         % strenght of preference towards 1
+rx = 0.05;                             % spatial radius for alignment in velocity
+rw = 0.05;                           % preference radius for alignment il velocity
+taur = 0.05;                         % strenght of preference towards 1
 taub = 0;                        % strenght of preference towards -1
 
 %% Changing taur and taub gives very rich dynamics
@@ -57,7 +57,7 @@ w0L = -1 + 2*rand(NL,1);
 
 x0 = x0L;
 v0 = v0L;
-w0 = 0*w0L;
+w0 = w0L;
 
 dU = @(r) morsepotential(r, Cr, Ca, lr, la);
 
@@ -99,7 +99,7 @@ end
 
 %% Plot of the final velocity configuration
 figure()
-plot(x(1:N,1,end), x(1:N,2,end), 'o', 'MarkerEdgeColor','Linewidth', 2, 'b', 'MarkerFaceColor', 'none','inewidth',2);  % Plot positions as circles
+plot(x(1:N,1,end), x(1:N,2,end), 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'none');  % Plot positions as circles
 hold on;
 
 quiver(x(1:N,1,end), x(1:N,2,end), x(N+1:2*N,1,end), x(N+1:2*N,2,end), 'r'); % Plot velocities as arrows
@@ -112,8 +112,8 @@ title('Velocities at the final time');
 
 hold off;
 axis equal;
-% filename1 = fullfile(outputFolder, ['NoOpFinalVelocity_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
-% saveas(gcf, filename1);
+filename1 = fullfile(outputFolder, ['NoOpFinalVelocity_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+saveas(gcf, filename1);
 
 %% Plot for several times
 
@@ -149,8 +149,8 @@ title('Velocities Over Time');
 view(3); % Use a 3D perspective
 hold off;
 
-% filename2 = fullfile(outputFolder, ['NoOpVelocityOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
-% saveas(gcf, filename2);
+filename2 = fullfile(outputFolder, ['NoOpVelocityOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+saveas(gcf, filename2);
 
 
 %% Plot of the trajectories for some times
@@ -187,8 +187,8 @@ title('Position Over Time');
 view(3); % Use a 3D perspective
 hold off;
 
-% filename3 = fullfile(outputFolder, ['NoOpPositionOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
-% saveas(gcf, filename3);
+filename3 = fullfile(outputFolder, ['NoOpPositionOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+saveas(gcf, filename3);
 
  %%
 
@@ -216,17 +216,16 @@ function [dx,dw] = F(x, w, NL, alpha, beta, dU, rx, rw, tauL, tauR)
     vL = -1;
     wL = -1;   
 
-    term1     = 1/N * computePotentialTerm(l,dU); % there is 1/N still missing here
+    term1     = 1/N*computePotentialTerm(l,dU); % there is 1/N still missing here
     term2     = (alpha - beta*sum(v.^2,2)).*v;
-    termLeft  = tauL*computeOpinionAlignmentPreference(v,wu,rw,vL,wL);
-    termRight = tauR*computeOpinionAlignmentPreference(v,wu,rw,vR,wR);
-    termVelAlign = 1/N * computeVelocityAligment(l,wu,v,N,rx,rw);
+    termLeft  = tauL*computeOpinionAlignmentPreference_left(v,wu,rw,vL,wL);
+    termRight = tauR*computeOpinionAlignmentPreference_right(v,wu,rw,vR,wR);
 
-    dv = term1 + term2 + termLeft + termRight + 0*termVelAlign;
+    dv = term1 + term2 + termLeft + termRight;
     dx = [v; dv];
 
     phi = computeOpinionAligment(l, wu, NL, rx, rw);
-    dw = 1/N * phi + tauL * (wL - wu) + tauR * (wR - wu); % notice the 1/N here
+    dw = 1/N*phi + tauL*(wL - wu) + tauR*(wR - wu); % notice the 1/N here
        
 end
 
@@ -239,21 +238,6 @@ function phi = computeOpinionAligment(x,w,N,rx,rw)
     distWij = sqrt(sum((incXij).^2, 3));   
     isClosed = (abs(wi - wj) < rw) & (distWij < rx);    
     phi      = sum(isClosed .* (wi - wj), 2);
-end
-
-function U = computeVelocityAligment(x,w,v,N,rx,rw)
-    wi = repmat(w, 1, N);
-    wj = repmat(w', N, 1);    
-    xj = reshape(x, [N, 1, size(x, 2)]);
-    xi = reshape(x, [1, N, size(x, 2)]);
-    vj = reshape(v, [N, 1, size(v, 2)]);
-    vi = reshape(v, [1, N, size(v, 2)]);
-    incXij  = xi - xj;
-    distWij = sqrt(sum((incXij).^2, 3));   
-    isClosed = (abs(wi - wj) < rw) & (distWij < rx);  
-    velDiff = vj - vi; % Pairwise velocity difference, 150x150x2
-    U = squeeze(sum(isClosed .* velDiff, 2));
-    %U      = sum(isClosed .* (vj - vi), 2);
 end
 
 function forces = computePotentialTerm(x,dU)
@@ -270,11 +254,25 @@ function morsepotential = morsepotential(r, Cr, Ca, lr, la)
     morsepotential = -(Cr/lr)*exp(-r./lr) + (Ca/la)*exp(-r./la);
 end
 
-function Op_align = computeOpinionAlignmentPreference(v,w1,rw,vt,wt)
-    isAligned = abs(w1 - wt) < rw;
-    Op_align = isAligned.*(vt-v);
+function Op_align = computeOpinionAlignmentPreference_left(v,w1,rw,vt,wt)
+    if w1 < 0
+       isAligned = w1;
+       Op_align = isAligned.*(vt-v);
+    else 
+        isAligned = 0;
+       Op_align = isAligned.*(vt-v);
+    end
 end
 
+function Op_align = computeOpinionAlignmentPreference_right(v,w1,rw,vt,wt)
+    if w1 > 0
+       isAligned = w1;
+       Op_align = isAligned.*(vt-v);
+    else 
+        isAligned = 0;
+       Op_align = isAligned.*(vt-v);
+    end
+end
 
 
 
