@@ -20,36 +20,35 @@ close all;
 
 % Problem data
 NL = 20;                             % number of individuals from each group (change the number N to get different dynamics)
-NF = 100;
+NF = 50;
 NU = 50;                             % we need to chenge NU=2, 20, 80
 
 N = NL + NF + NU;
 %%
 alpha = 1; beta = 0.5;                        % friction parameters
-%Ca = 100; la = 1; Cr = 60; lr = 0.5;          % clusters moving in opposite direction (rotating)
-%Ca = 100; la = 1; Cr = 50; lr = 0.5;          % circle formation
-%Ca = 100; la = 1; Cr = 50; lr = 1.2;
 Ca = 50; la = 1; Cr = 60; lr = 0.5;           % rotating mill
 
+% alpha = 1; beta = 5;
+% Ca = 100; la = 1.2; Cr = 350; lr = 0.8; %la = 2.2
 
 %%
 T = 100;                             % final time
 dt = 1.0e-2;                        % timestep
 M = floor(T/dt);                    % number of time steps
 
-rx = 1;                             % spatial radius for alignment in velocity
-rw = 0.5;                           % preference radius for alignment il velocity
+rx = 1;%5;                             % spatial radius for alignment in velocity 1
+rw = 0.5;%1;                           % preference radius for alignment il velocity 0.5
 
 %% R: preference towards 1 (leaders), L: preference towards -1 (followers)
 
-%If we change from 0.3 to 0.4 the trajectories collapse to one point
-gammaL_left = 1;
-gammaL_right = 1;
-tauL_right = 0.2;
+%
+gammaL_left = 1;                   % alignment in velocity
+gammaL_right = 1;                  % alignment in velocity
+tauL_right = 0.1;                  % alignment in opinion
 
-gammaF_right = 1;
-gammaF_left = 1;
-tauF_left = 0.02;
+gammaF_right = 1;                  % alignment in velocity
+gammaF_left = 1;                   % alignment in velocity
+tauF_left = 0.01;                  % alignment in opinion
 
 gammaU_left = 0;
 gammaU_right = 0;
@@ -65,12 +64,12 @@ x0F = -1 + 2*rand(NF,2); v0F = -1 + 2*rand(NF,2);
 w0F = -1 + 2*rand(NF,1);
 
 x0U = -1 + 2*rand(NU,2); v0U = -1 + 2*rand(NU,2);
-w0U = -0.1 + 0.2*rand(NU,1);
+w0U = -0.1 + 0.2*rand(NU,1);              % the uninformed opinions start very close to zero
 %w0U = -1 + 2*rand(NU,1);
 
 x0 = [x0L;x0F;x0U];
 v0 = [v0L;v0F;v0U];
-w0 = [w0L;w0F;w0U];
+w0 = [w0L;w0F;0*w0U];
 
 dU = @(r) morsepotential(r, Cr, Ca, lr, la);
 
@@ -103,7 +102,7 @@ end
 
 %% Save figure
 
-outputFolder = 'Figures_3pop';      % Folder to save the figures
+outputFolder = 'Figures_Mill_allcases';      % Folder to save the figures
 % Create the folder if it doesn't exist
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
@@ -129,7 +128,7 @@ title('Velocities at the final time');
 hold off;
 axis equal; fontsize(gca, 15,'points');
 
-filename1 = fullfile(outputFolder, '3Population_finalVel_FLU2.fig');
+filename1 = fullfile(outputFolder, ['3PopOp_WithUninformed_FLUInteraction_case2_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(tauL_right),'_taub_',num2str(tauF_left), '.fig']);
 saveas(gcf, filename1);
 
 %% Plot for several times
@@ -221,8 +220,8 @@ xlabel('Time');
 ylabel('Opinion');
 title('Opinion Over Time'); fontsize(gca, 15,'points');
 
-% filename4 = fullfile(outputFolder, 'OpinionOverTime_FLU3.fig');
-% saveas(gcf, filename4);
+filename2 = fullfile(outputFolder, ['OpinionEvol_WithUninformed_FLUInteraction_case2_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(tauL_right),'_taub_',num2str(tauF_left), '.fig']);
+saveas(gcf, filename2);
 
 
 
@@ -262,8 +261,8 @@ ylabel('Mean V_y');
 title('Mean Velocity Component V_y Over Time');
 grid on; fontsize(gca, 15,'points');
 
-filename5 = fullfile(outputFolder, 'VelocityComponents_FLU2.fig');
-saveas(gcf, filename5);
+% filename5 = fullfile(outputFolder, 'VelocityComponents_FLU2.fig');
+% saveas(gcf, filename5);
 
 
 figure();
@@ -277,8 +276,8 @@ ylabel('Mean Opnion');
 title('Mean opinion of the whole population');
 grid on; fontsize(gca, 15,'points');
 
-filename6 = fullfile(outputFolder, 'MeanOpinion_FLU2.fig');
-saveas(gcf, filename6);
+% filename6 = fullfile(outputFolder, 'MeanOpinion_FLU2.fig');
+% saveas(gcf, filename6);
 
 
 % Combine velocity components into magnitude (optional)
@@ -290,8 +289,8 @@ ylabel('Mean Velocity');
 title('Mean Velocity Over Time');
 grid on; fontsize(gca, 15,'points');
 
-filename7 = fullfile(outputFolder, 'MeanVelocityOther_FLU2.fig');
-saveas(gcf, filename7);
+% filename7 = fullfile(outputFolder, 'MeanVelocityOther_FLU2.fig');
+% saveas(gcf, filename7);
 
 figure;
 mean_velocity_magnitude = sqrt(mean_vx_time.^2 + mean_vy_time.^2);
@@ -301,8 +300,8 @@ ylabel('Mean Velocity Magnitude');
 title('Mean Velocity Magnitude Over Time');
 grid on; fontsize(gca, 15,'points');
 
-filename8 = fullfile(outputFolder, 'MeanVelocityMagnitude_FLU2.fig');
-saveas(gcf, filename8);
+% filename8 = fullfile(outputFolder, 'MeanVelocityMagnitude_FLU2.fig');
+% saveas(gcf, filename8);
 
 
 % -------------------PROBLEM-RELATED FUNCTIONS------------------- %
@@ -325,35 +324,46 @@ function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_left, ga
 
     vRight = 1;
     wRight = 1;    
+    xRight = 1;
 
     vLeft = -1;
     wLeft = -1;   
+    xLeft = -1;
 
-    term1_LL     = 1/NL*computePotentialTerm(xL,dU); % 
-    term1_FF     = 1/NF*computePotentialTerm(xF,dU); % 
-    term1_UU     = 1/NU*computePotentialTerm(xU,dU); % 
+    term1_LL     = 1/NL * computePotentialTerm(xL,dU); % 
+    term1_FF     = 1/NF * computePotentialTerm(xF,dU); % 
+    term1_UU     = 1/NU * computePotentialTerm(xU,dU); % 
 
-    term1_LF     = 1/NF*computePotentialTermInterSpecie(xL,xF,dU);
-    term1_FL     = 1/NL*computePotentialTermInterSpecie(xF,xL,dU);
+    term1_LF     = 1/NF * computePotentialTermInterSpecie(xL,xF,dU);
+    term1_FL     = 1/NL * computePotentialTermInterSpecie(xF,xL,dU);
 
-    term1_LU     = 1/NU*computePotentialTermInterSpecie(xL,xU,dU);
-    term1_UL     = 1/NL*computePotentialTermInterSpecie(xU,xL,dU);
+    term1_LU     = 1/NU * computePotentialTermInterSpecie(xL,xU,dU);
+    term1_UL     = 1/NL * computePotentialTermInterSpecie(xU,xL,dU);
 
-    term1_FU     = 1/NU*computePotentialTermInterSpecie(xF,xU,dU);
-    term1_UF     = 1/NF*computePotentialTermInterSpecie(xU,xF,dU);
+    term1_FU     = 1/NU * computePotentialTermInterSpecie(xF,xU,dU);
+    term1_UF     = 1/NF * computePotentialTermInterSpecie(xU,xF,dU);
 
-    term2_L     = (alpha - beta*sum(vL.^2,2)).*vL;
-    term2_F     = (alpha - beta*sum(vF.^2,2)).*vF;
-    term2_U     = (alpha - beta*sum(vU.^2,2)).*vU;
+    term2_L     = (alpha - beta*sum(vL.^2,2)).* vL;
+    term2_F     = (alpha - beta*sum(vF.^2,2)).* vF;
+    term2_U     = (alpha - beta*sum(vU.^2,2)).* vU;
 
     termRight_L  = gammaL_right * computeOpinionAlignmentPreference(vL,wL,rw,vRight,wRight);
     termLeft_L   = gammaL_left * computeOpinionAlignmentPreference(vL,wL,rw,vLeft,wLeft);
 
+%     termRight_L  = gammaL_right * computeOpinionAlignmentPreference(xL,wL,rw,xRight,wRight);
+%     termLeft_L   = gammaL_left * computeOpinionAlignmentPreference(xL,wL,rw,xLeft,wLeft);
+
     termLeft_F  = gammaF_left * computeOpinionAlignmentPreference(vF,wF,rw,vLeft,wLeft);
     termRight_F = gammaF_right * computeOpinionAlignmentPreference(vF,wF,rw,vRight,wRight);
 
+%     termLeft_F  = gammaF_left * computeOpinionAlignmentPreference(xF,wF,rw,xLeft,wLeft);
+%     termRight_F = gammaF_right * computeOpinionAlignmentPreference(xF,wF,rw,xRight,wRight);
+
     termLeft_U  = gammaU_left * computeOpinionAlignmentPreference(vU,wU,rw,vLeft,wLeft);
     termRight_U = gammaU_right * computeOpinionAlignmentPreference(vU,wU,rw,vRight,wRight);
+
+%     termLeft_U  = gammaU_left * computeOpinionAlignmentPreference(xU,wU,rw,xLeft,wLeft);
+%     termRight_U = gammaU_right * computeOpinionAlignmentPreference(xU,wU,rw,xRight,wRight);
 
     dvL = term1_LL + term1_LF + term1_LU + term2_L + termRight_L + termLeft_L; % check if the termLeft_L is needed
     dvF = term1_FF + term1_FL + term1_FU + term2_F + termLeft_F + termRight_F;
@@ -374,8 +384,8 @@ function [dx, dw] = F(x, w, NL, NF, NU, alpha, beta, dU, rx, rw, gammaL_left, ga
     phi_FU = 1/NU * computeOpinionAlignmentInterSpecie(xF, xU, wF, wU, NF, NU, rx, rw);
     phi_UF = 1/NF * computeOpinionAlignmentInterSpecie(xU, xF, wU, wF, NU, NF, rx, rw);
 
-    dwL = phi_LL + phi_LF + 0*phi_LU + tauL_right*(wRight - wL);
-    dwF = phi_FF + phi_FL + phi_FU + tauF_left*(wLeft - wF);
+    dwL = phi_LL + phi_LF + 0*phi_LU - tauL_right*(wL - wRight);
+    dwF = phi_FF + phi_FL + phi_FU - tauF_left*(wF - wLeft);
     dwU = 0*phi_UU + 0*phi_UF + 0*phi_UL;
 
     dw = [dwL; dwF; dwU];
@@ -466,5 +476,8 @@ function Op_align = computeOpinionAlignmentPreference(v,w1,rw,vt,wt)
     Op_align = isAligned.*(vt-v);
 end
 
-
+% function Op_align = computeOpinionAlignmentPreference(l,w1,rw,xt,wt)
+%     isAligned = abs(w1 - wt) < rw;
+%     Op_align = isAligned.*(xt-l);
+% end
 

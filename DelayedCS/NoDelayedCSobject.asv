@@ -1,0 +1,217 @@
+classdef DelayedCSobject < handle
+
+    properties (Access = private)
+        zGlobal
+        tGlobal
+    end
+
+    methods (Access  = public)
+
+        function obj = DelayedCSobject()
+
+
+            %% Parameters
+            N = 6;               % Number of agents
+            beta = 0.3;            % Decay rate for communication
+            t_final = 50;        % Final simulation time
+            dt = 0.01;           % Time step for integration
+            tau_max = 20;         % Maximum delay
+            %     phi = @(tau) exp(-tau); % Exponential kernel function
+
+            phi_exponent = 5.5;
+            %phi = @(tau) 1/(1+tau.^phi_exponent); % Levy kernel
+            %phi = @(tau) exp(-tau); % Levy kernel
+            %phi = @(tau) dirac(tau);
+
+            Ca = 1; la = 1; Cr = 1; lr = 0.5;
+            rng(0);              % Seed for reproducibility
+
+            nDim = 3;
+            %% Initial Conditions
+            x0 = 0+1*rand(nDim, N);     % Initial positions (3D)
+            v0 = rand(nDim, N);     % Initial velocities (3D)
+            z0 = [x0(:); v0(:)]; % Flattened initial state vector
+
+            f = @(t, z) obj.swarmingEquation(t, z, N, nDim, beta, tau_max, dt, phi, Ca, la, Cr, lr);
+
+            %% Solve ODE
+            [t, z] = ode45(f, [0 t_final], z0);
+
+            %% Post-process and Plot Results
+            nT = length(t);
+            [x,v] = obj.obtainDisplacementAndVelocity(z,nT,nDim,N);
+
+            % Plot Trajectories
+            figure;
+            hold on;
+            for i = 1:N
+                plot(squeeze(x(1, i, :)), squeeze(x(2, i, :)), 'LineWidth', 1.5); % Plot trajectories
+            end
+            xlabel('x'); ylabel('y');
+            title('Trajectories of Agents');
+            %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
+            grid on;
+            hold off;
+
+
+            % Plot Velocity Magnitude vs Time
+            figure;
+            hold on;
+            for i = 1:N
+                plot(t, squeeze(sqrt(v(1, i, :).^2 + v(2, i, :).^2 + v(3, i, :).^2)), 'LineWidth', 1.5); % Velocity Magnitude
+            end
+            xlabel('Time (t)'); ylabel('Magnitude of Velocity');
+            title('Velocity Magnitude Over Time');
+            %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
+            grid on;
+            hold off;
+
+            % Plot 3D Trajectories (Position vs Time)
+            figure;
+            hold on;
+            for i = 1:N
+                plot3(squeeze(x(1, i, :)), squeeze(x(2, i, :)), squeeze(x(3, i, :)), 'LineWidth', 1.5); % 3D Position
+            end
+            xlabel('X'); ylabel('Y'); zlabel('Z');
+            title('3D Trajectories of Agents');
+            %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
+            grid on;
+            hold off;
+
+            % Plot 3D Velocity Components (Velocity vs Time)
+            figure;
+            hold on;
+            for i = 1:N
+                % Plot the 3 components of the velocity (x, y, z) as separate curves
+                plot3(squeeze(v(1, i, :)), squeeze(v(2, i, :)), squeeze(v(3, i, :)), 'LineWidth', 1.5);
+            end
+            xlabel('Time (t)');
+            ylabel('Velocity X');
+            zlabel('Velocity Y');
+            title('Velocity Components of Agents in 3D');
+            %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
+            grid on;
+            hold off;
+
+        end
+
+
+    end
+
+    methods (Access = private)
+
+  %% System of ODEs with Morse Potential
+        function dzdt = swarmingEquation(obj,t, z, N, nDim,beta, tau_max, dt, phi, Ca, la, Cr, lr)
+            % Extract Positions and Velocities
+            obj.zGlobal = [obj.zGlobal,z];
+            obj.tGlobal = [obj.tGlobal,t];
+
+            nT = size(obj.zGlobal,2);
+            [xG,vG] = obj.obtainDisplacementAndVelocity(obj.zGlobal',nT,nDim,N);
+
+            x = xG(:,:,end);
+            v = vG(:,:,end);
+
+            % Initialize Derivatives
+            dxdt = v;                % dx/dt = v
+            dvdt = zeros(size(v));   % dv/dt = 0 initially
+
+            % Loop over agents
+            for i = 1:N
+                for j = 1:N
+                    if i ~= j
+                        % Trapezoidal rule for the integral
+                        %tau_values = obj.tGlobal;0:dt:t; % Discretize tau
+                        integral_term = zeros(3, 1); % Initialize integral
+
+                            nT = size(obj.zGlobal,2);
+                            [xG,vG] = obj.obtainDisplacementAndVelocity(obj.zGlobal',nT,nDim,N);
+
+                            
+%                         for iTau = 1:nT-1%length(tau_values)-1
+%                             %tau = tau_values(iTau);
+%                             tauOld = t - obj.tGlobal(nT+1-iTau);
+%                             tauNew = t - obj.tGlobal(nT-iTau);
+%                             dt = tauNew-tauOld;
+
+                            % Past positions and velocities
+                            %iTau
+                            x2 = xG(:,:,t);
+                            v2 = vG(:,:,t);                            
+
+                            x_i_tau = x2(:,i);
+                            x_j_tau = x2(:,j);
+
+                            v_i_tau = v2(:,i);
+                            v_j_tau = v2(:,j);
+
+                            % Compute Communication Rate H
+                            H = obj.alignmentPotential(x_i_tau,x_j_tau,beta);
+
+                            % Compute the integrand
+                            integrand = phi(tauNew)*H*(v_j_tau - v_i_tau);
+
+                            % Apply Trapezoidal Rule Weight
+                            if iTau == 1 || iTau == nT-1
+                                weight = 0.5; % Half weight at boundaries
+                            else
+                                weight = 1;
+                            end
+                            integral_term = integral_term + weight * integrand * dt;
+                        %end
+                        dvdt(:, i) = dvdt(:, i) + (1 / N) * integral_term; % Add interaction term
+                    end
+                end
+
+
+                % Add the Morse potential term (no delay)
+                for j = 1:N
+                    if i ~= j
+                        % Distance between agents
+                        r = norm(x(:, i) - x(:, j));
+                        % Compute the force using the Morse potential
+                        force_morse = obj.morse_force(r, Cr, Ca, lr, la);
+                        % Update the velocity using the force (No delay term here)
+                        dvdt(:, i) = dvdt(:, i) + (1 / N) * force_morse;
+                    end
+                end
+            end
+
+            % Combine Derivatives
+            dzdt = [dxdt(:); dvdt(:)];
+        end
+
+    end
+
+    methods (Access = private, Static)
+
+        function [x,v] = obtainDisplacementAndVelocity(z,nT,nDim,N)            
+            x = reshape(z(:, 1:nDim*N)', [nDim, N, nT]);       % Extract positions (3D)
+            v = reshape(z(:, nDim*N+1:end)', [nDim, N, nT]);   % Extract velocities (3D)
+        end
+
+        function H = alignmentPotential(x_i_tau,x_j_tau,beta)
+            d = norm(x_i_tau - x_j_tau)^2;
+            H = 1 / (1 + d)^beta;
+        end
+
+      
+
+             %% Morse Potential Force
+        % function force = morse_force(r, D_e, r_e, alpha)
+        %     % Compute the force from the Morse potential
+        %     V = D_e * (2 * exp(-alpha * (r - r_e)) - exp(-2 * alpha * (r - r_e)));
+        %     force = -V * (r - r_e) / r; % Force is the negative gradient of potential
+        % end
+
+
+        function force = morse_force(r, Cr, Ca, lr, la)
+            force = -(Cr/lr)*exp(-r./lr) + (Ca/la)*exp(-r./la);
+        end
+
+
+
+
+
+    end
+end

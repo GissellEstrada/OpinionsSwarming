@@ -11,21 +11,22 @@ classdef DelayedCSobject < handle
 
 
             %% Parameters
-            N = 10;               % Number of agents
-            beta = 0.3;            % Decay rate for communication
+            N = 8;               % Number of agents
+            beta = 1.2;            % Decay rate for communication
             t_final = 10;        % Final simulation time
             dt = 0.01;           % Time step for integration
             tau_max = 20;         % Maximum delay
             %     phi = @(tau) exp(-tau); % Exponential kernel function
 
             phi_exponent = 0.5;
-            phi = @(tau) 1/(1+tau.^phi_exponent); % Levy kernel
+            phi = @(tau) 1/(1+tau).^phi_exponent; % Levy kernel
             %phi = @(tau) exp(-tau); % Levy kernel
+            %phi = @(tau) dirac(tau);
 
             Ca = 1; la = 1; Cr = 1; lr = 0.5;
             rng(0);              % Seed for reproducibility
 
-            nDim = 3;
+            nDim = 2;
             %% Initial Conditions
             x0 = 0+1*rand(nDim, N);     % Initial positions (3D)
             v0 = rand(nDim, N);     % Initial velocities (3D)
@@ -40,7 +41,7 @@ classdef DelayedCSobject < handle
             nT = length(t);
             [x,v] = obj.obtainDisplacementAndVelocity(z,nT,nDim,N);
 
-            % Plot Trajectories
+%             % Plot Trajectories
             figure;
             hold on;
             for i = 1:N
@@ -53,11 +54,17 @@ classdef DelayedCSobject < handle
             hold off;
 
 
+            for j = 1:nT
+            for i=1:N
+                 MeanVeloc(i,j) = mean(sqrt(v(1, i, j).^2 + v(2, i, j).^2));
+            end
+            end
             % Plot Velocity Magnitude vs Time
             figure;
             hold on;
             for i = 1:N
-                plot(t, squeeze(sqrt(v(1, i, :).^2 + v(2, i, :).^2 + v(3, i, :).^2)), 'LineWidth', 1.5); % Velocity Magnitude
+                plot(t, squeeze(sqrt(v(1, i, :).^2 + v(2, i, :).^2)), 'LineWidth', 1.5);  % this is the mean velocity of each particle
+                %plot(t, MeanVeloc(i,:),'*');
             end
             xlabel('Time (t)'); ylabel('Magnitude of Velocity');
             title('Velocity Magnitude Over Time');
@@ -65,28 +72,29 @@ classdef DelayedCSobject < handle
             grid on;
             hold off;
 
-            % Plot 3D Trajectories (Position vs Time)
-            figure;
-            hold on;
-            for i = 1:N
-                plot3(squeeze(x(1, i, :)), squeeze(x(2, i, :)), squeeze(x(3, i, :)), 'LineWidth', 1.5); % 3D Position
-            end
-            xlabel('X'); ylabel('Y'); zlabel('Z');
-            title('3D Trajectories of Agents');
-            %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
-            grid on;
-            hold off;
+%             % Plot 3D Trajectories (Position vs Time)
+%             figure;
+%             hold on;
+%             for i = 1:N
+%                 plot3(squeeze(x(1, i, :)), squeeze(x(2, i, :)), squeeze(x(3, i, :)), 'LineWidth', 1.5); % 3D Position
+%             end
+%             xlabel('X'); ylabel('Y'); zlabel('Z');
+%             title('3D Trajectories of Agents');
+%             %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
+%             grid on;
+%             hold off;
 
             % Plot 3D Velocity Components (Velocity vs Time)
             figure;
             hold on;
+            
             for i = 1:N
                 % Plot the 3 components of the velocity (x, y, z) as separate curves
-                plot3(squeeze(v(1, i, :)), squeeze(v(2, i, :)), squeeze(v(3, i, :)), 'LineWidth', 1.5);
+                plot(squeeze(v(1, i, :)), squeeze(v(2, i, :)), 'LineWidth', 1.5);
             end
-            xlabel('Time (t)');
-            ylabel('Velocity X');
-            zlabel('Velocity Y');
+            xlabel('Velocity X');
+            ylabel('Velocity Y');
+            
             title('Velocity Components of Agents in 3D');
             %legend(arrayfun(@(i) sprintf('Agent %d', i), 1:N, 'UniformOutput', false));
             grid on;
@@ -105,7 +113,7 @@ classdef DelayedCSobject < handle
             obj.zGlobal = [obj.zGlobal,z];
             obj.tGlobal = [obj.tGlobal,t];
 
-            nT =size(obj.zGlobal,2);
+            nT = size(obj.zGlobal,2);
             [xG,vG] = obj.obtainDisplacementAndVelocity(obj.zGlobal',nT,nDim,N);
 
             x = xG(:,:,end);
@@ -121,9 +129,9 @@ classdef DelayedCSobject < handle
                     if i ~= j
                         % Trapezoidal rule for the integral
                         %tau_values = obj.tGlobal;0:dt:t; % Discretize tau
-                        integral_term = zeros(3, 1); % Initialize integral
+                        integral_term = zeros(nDim, 1); % Initialize integral
 
-                            nT =size(obj.zGlobal,2);
+                            nT = size(obj.zGlobal,2);
                             [xG,vG] = obj.obtainDisplacementAndVelocity(obj.zGlobal',nT,nDim,N);
 
                             
@@ -149,7 +157,7 @@ classdef DelayedCSobject < handle
 
                             % Compute the integrand
                             integrand = phi(tauNew)*H*(v_j_tau - v_i_tau);
-
+                          
                             % Apply Trapezoidal Rule Weight
                             if iTau == 1 || iTau == nT-1
                                 weight = 0.5; % Half weight at boundaries

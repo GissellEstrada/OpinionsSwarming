@@ -112,8 +112,8 @@ title('Velocities at the final time');
 
 hold off;
 axis equal;
-filename1 = fullfile(outputFolder, ['NoOpFinalVelocity_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
-saveas(gcf, filename1);
+% filename1 = fullfile(outputFolder, ['NoOpFinalVelocity_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+% saveas(gcf, filename1);
 
 %% Plot for several times
 
@@ -149,8 +149,8 @@ title('Velocities Over Time');
 view(3); % Use a 3D perspective
 hold off;
 
-filename2 = fullfile(outputFolder, ['NoOpVelocityOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
-saveas(gcf, filename2);
+% filename2 = fullfile(outputFolder, ['NoOpVelocityOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+% saveas(gcf, filename2);
 
 
 %% Plot of the trajectories for some times
@@ -187,8 +187,8 @@ title('Position Over Time');
 view(3); % Use a 3D perspective
 hold off;
 
-filename3 = fullfile(outputFolder, ['NoOpPositionOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
-saveas(gcf, filename3);
+% filename3 = fullfile(outputFolder, ['NoOpPositionOverTime_NL', num2str(NL),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(Ca),'_la_',num2str(la),'_Cr_',num2str(Cr),'_lr_',num2str(lr),'_rx_',num2str(rx),'_rw_',num2str(rw),'_taur_',num2str(taur),'_taub_',num2str(taub), '.fig']);
+% saveas(gcf, filename3);
 
  %%
 
