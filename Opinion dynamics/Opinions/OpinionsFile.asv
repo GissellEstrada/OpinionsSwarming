@@ -1,0 +1,75 @@
+function OpinionsFile
+% Parameters for types of "fish"
+N1 = 5; % leader fishy
+N2 = 6; % follower fishy
+N3 = 10; % undecided fishy
+N = N1 + N2 + N3; % Total number of "fish"
+Nt = 5000; % Number of time steps
+dt = 0.01; % Time step size
+tlist = (0:Nt-1) * dt; % Time list
+
+% Prefactors for each group of fish
+prefac1 = dt / N1;
+prefac2 = dt / N2;
+prefac3 = dt / N3;
+
+% Parameters for saving results
+save_every = 50;
+S = floor(Nt / save_every);
+
+% Radius and other parameters
+Rx = 2.0;
+rx = 2.0;
+rw = 2.0;
+
+% Morse potential parameters
+CR = 1.5;
+LR = 0.25;
+CA = 1.0;
+LA = 0.75;
+
+% Other constants
+alpha = 1.0;
+beta = 0.5;
+
+% Directions to different targets
+v_r = [1, 0];
+v_b = [-1, 0];
+tau_r = 0.9;
+tau_b = 0.9;
+muL = 0.001 * dt;
+muF = 0.001 * dt;
+
+% Initialize variables
+z1 = zeros(S + 1, 5, N1);
+z2 = zeros(S + 1, 5, N2);
+z = zeros(S + 1, 5, N3);
+
+end
+
+function [diffxixj, distance] = euclidean_distance(y1, y2)
+    % Calculates the Euclidean distance between two sets of points y1 and y2
+    % Input:
+    %   y1 - First array of points, size [N, D]
+    %   y2 - Second array of points, size [M, D]
+    % Output:
+    %   diffxixj - Difference between each pair of points in y1 and y2, size [N, M, D]
+    %   distance - Euclidean distance between each pair of points, size [N, M]
+    
+    % Calculate the differences between each point in y1 and each point in y2
+    diffxixj = bsxfun(@minus, y1, permute(y2, [3, 2, 1]));
+    
+    % Calculate the Euclidean distance
+    distance = sqrt(sum(diffxixj .^ 2, 2));
+end
+
+function opinion_dist = opinion_distance(w1, w2)
+    % Calculates the opinion distance (element-wise difference) between w1 and w2
+    % Input:
+    %   w1 - First array, size [N, 1]
+    %   w2 - Second array, size [M, 1]
+    % Output:
+    %   opinion_dist - Difference between each element in w1 and w2, size [N, M]
+    
+    opinion_dist = bsxfun(@minus, w1, permute(w2, [2, 1]));
+end
