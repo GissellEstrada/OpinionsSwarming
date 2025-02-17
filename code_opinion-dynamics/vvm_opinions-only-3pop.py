@@ -3,7 +3,7 @@ def psi(wk, wm, n_k, n_m, r_w):
     for i in range(n_k):
         for j in range(n_m):
             if abs(wm[j]-wk[i]) < r_w:
-                Psi[i] += (wm[j]-wk[i])     # consultar gissell: j-i?
+                Psi[i] += (wm[j]-wk[i])     # j-i? [GER]
     return Psi
 
 

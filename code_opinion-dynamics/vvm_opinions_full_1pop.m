@@ -212,75 +212,82 @@ function morse_potential = morse_potential(r, c_rep, c_att, l_rep, l_att)
 end
 
 
-function [dx,dv,dw] = ode_system(x, v, w, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
-    % x_aux = x(1:n,:);
-    % v_aux = v(1:n,:);
+function [dx,dv,dw] = ode_system(x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
+    % x_step, v_step, w_step are x,v,w at a given step.
+    % In this case, we are considering tau = gamma. [GER]
 
     v_blue = 1;
-    w_blue = 1;
-    x_blue = 1;
-
     v_red = -1;
-    w_red = -1; 
-    x_red = -1;
+    % v_blue = [1, 0];      [GER]
+    % v_red = [0, -1];
 
-    term_1 = (alpha - beta*sum(v.^2,2)) .* v;
-    term_2 = -1/n * potential_sum(x,nabla_u);
+    w_blue = 1;
+    w_red = -1;
 
-    term_3_red = tau_red * velocity_alignment(v,v_red,w,w_red,r_w);
-    term_3_blue = tau_blue * velocity_alignment(v,v_blue,w,w_blue,r_w);
+    % x_blue = 1;           [GER]
+    % x_red = -1;
 
-    phi = opinion_alignment(x, w, n, r_x, r_w);
+    term_1 = (alpha - beta*sum(v_step.^2,2)) .* v_step;
+    term_2 = -1/n * potential_sum(x_step,nabla_u);
+
+    term_3_red = tau_red * velocity_alignment(v_step,v_red,w_step,w_red,r_w);
+    term_3_blue = tau_blue * velocity_alignment(v_step,v_blue,w_step,w_blue,r_w);
+
+    phi = opinion_alignment_sum(x_step, w_step, n, r_x, r_w);
     
-    % term_3_red  = tau_red*computeOpinionAlignmentPreference(x,w,r_w,x_red,w_red);
-    % term_3_blue = tau_blue*computeOpinionAlignmentPreference(x,w,r_w,x_blue,w_blue);
-    % termVelAlign = 1/n * computeVelocityAligment(x,w,v,n,r_x,r_w);
+    % term_3_red  = tau_red*alternative_opinion_alignment(x_step,w_step,r_w,x_red,w_red);
+    % term_3_blue = tau_blue*alternative_opinion_alignment(x_step,w_step,r_w,x_blue,w_blue);
+    % termVelAlign = 1/n * another_thing_velocity_aligment(x_step,w_step,v_step,n,r_x,r_w);
     % dv = term_1 + term_2 + term_3_red + term_3_blue + 0*termVelAlign;
 
-    dx = v;
+    dx = v_step;
     dv = term_1 + term_2 + term_3_red + term_3_blue;
-    dw = 1/n * phi - tau_red * (w - w_red) - tau_blue * (w - w_blue); % notice the 1/n here
-       
+    dw = phi / n + tau_red * (w_red-w_step) + tau_blue * (w_blue-w_step); 
 end
 
 
-function forces = potential_sum(x, nabla_u)
-    xi = x;
-    xj = reshape(x', 1, size(x, 2), []); 
+function forces = potential_sum(x_step, nabla_u)
+    xi = x_step;
+    xj = reshape(x_step', 1, size(x_step, 2), []); 
     z = xi - xj;
     d_ij = sqrt(sum(z.^2, 2));
     d_ij(d_ij == 0) = 1;
-    forces = nabla_u(d_ij) .* z ./ d_ij;
+    % [GER] 2. Maybe it's better to set a threshold, since we might have two particles that
+    % [GER]    are almost at the same position, leading to unrealistic outputs.
+    % [GER] 1. Why 1? What is the length scale? Maybe we sould set a minimum particle distance,
+    % [GER]    though it may lead to change the physics.
+    forces = nabla_u(d_ij) .* z ./ d_ij;                    % [GER] falten parametres?
     forces = squeeze(sum(forces, 3));    
 end
 
 
-function alignment = velocity_alignment(v, v_ref, w, w_ref, r_w)
-    bool_aligned = abs(w - w_ref) < r_w;
-    alignment = bool_aligned .* (v_ref-v);
+function alignment = velocity_alignment(v_step, v_ref, w_step, w_ref, r_w)
+    bool_aligned = abs(w_step - w_ref) < r_w;
+    alignment = bool_aligned .* (v_ref-v_step);
 end
 
 
-function phi = opinion_alignment(x, w, n, r_x, r_w)
-    wi = repmat(w, 1, n);
-    wj = repmat(w', n, 1);    
-    xi = reshape(x, [n, 1, size(x, 2)]);
-    xj = reshape(x, [1, n, size(x, 2)]);
-    incXij  = xi - xj;
-    distWij = sqrt(sum((incXij).^2, 3));   
-    isClosed = (abs(wi - wj) < r_w) & (distWij < r_x);
-    %isClosed = (abs(wi - wj) < r_w);
-    phi      = sum(isClosed .* (wj - wi), 2);
+function phi = opinion_alignment_sum(x_step, w_step, n, r_x, r_w)
+    wi = repmat(w_step, 1, n);
+    wj = repmat(w_step', n, 1);    
+    xi = reshape(x_step, [n, 1, size(x_step, 2)]);
+    xj = reshape(x_step, [1, n, size(x_step, 2)]);
+
+    z  = xi - xj;
+    d_ij = sqrt(sum((z).^2, 3));   
+    bool_phi = (abs(wi - wj) < r_w) & (d_ij < r_x);
+    
+    phi = sum(bool_phi .* (wj - wi), 2);                % [GER] j-i?
 end
 
 
-% function U = computeVelocityAligment(x,w,v,n,r_x,r_w) % this is velocity alignment as in Cucker-Smale
-%     wi = repmat(w, 1, n);
-%     wj = repmat(w', n, 1);    
-%     xj = reshape(x, [n, 1, size(x, 2)]);
-%     xi = reshape(x, [1, n, size(x, 2)]);
-%     vj = reshape(v, [n, 1, size(v, 2)]);
-%     vi = reshape(v, [1, n, size(v, 2)]);
+% function U = another_thing_velocity_aligment(x_step,w_step,v_step,n,r_x,r_w) % this is velocity alignment as in Cucker-Smale
+%     wi = repmat(w_step, 1, n);
+%     wj = repmat(w_step', n, 1);    
+%     xj = reshape(x_step, [n, 1, size(x_step, 2)]);
+%     xi = reshape(x_step, [1, n, size(x_step, 2)]);
+%     vj = reshape(v_step, [n, 1, size(v_step, 2)]);
+%     vi = reshape(v_step, [1, n, size(v_step, 2)]);
 %     incXij  = xi - xj;
 %     distWij = sqrt(sum((incXij).^2, 3));   
 %     isClosed = (abs(wi - wj) < r_w) & (distWij < r_x);  
@@ -290,9 +297,9 @@ end
 % end
 
 
-% function Op_align = computeOpinionAlignmentPreference(x,w1,r_w,xt,wt) 
-%     isAligned = abs(w1 - wt) < r_w;
-%     Op_align = isAligned.*(xt-x);
+% function alignment = alternative_opinion_alignment(x_step,w1,r_w,xt,wt) 
+%     bool_aligned = abs(w1 - wt) < r_w;
+%     alignment = bool_aligned.*(xt-x_step);
 % end
 
 
