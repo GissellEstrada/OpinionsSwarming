@@ -57,7 +57,7 @@ w(:,1) = w_0;
 
 %% Integration step
 
-% First step: compute initial solution and use Euler
+% Preparation: compute the first solution using Euler. Use it to compute the second system.
 
 [dx_1, dv_1, dw_1] = ode_system(x(:,:,1), v(:,:,1), w(:,1), n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue);
 
@@ -65,23 +65,22 @@ x(:,:,2) = x(:,:,1) + dt*dx_1;
 v(:,:,2) = v(:,:,1) + dt*dv_1;
 w(:,2) = w(:,1) + dt*dw_1;
 
-% Compute solution for the second step (needed for Adams-Bashforth)
 [dx_2, dv_2, dw_2] = ode_system(x(:,:,2), v(:,:,2), w(:,2), n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue);
 
 % Adams-Bashforth 2-step method
 for i = 3:steps
-    % Adams-Bashforth 2-step formula
     x(:,:,i) = x(:,:,i-1) + (dt/2) * (3*dx_2 - dx_1);
     v(:,:,i) = v(:,:,i-1) + (dt/2) * (3*dv_2 - dv_1);
     w(:,i) = w(:,i-1) + (dt/2) * (3*dw_2 - dw_1);
-    % Update ode_system values for the next step
-    dx_1 = dx_2;  % ode_system from previous step
-    dv_1 = dv_2;
-    dw_1 = dw_2;
-    [dx_2, dv_2, dw_2] = ode_system(x(:,:,i), v(:,:,i), w(:,i), n, alpha, beta,nabla_u, r_x, r_w, tau_red, tau_blue);  % ode_system for current step
     if any(isnan(x(:,:,i)), 'all') || any(isinf(x(:,:,i)), 'all')
         error('NaN or Inf encountered at time step %d', i);
     end
+
+    dx_1 = dx_2;
+    dv_1 = dv_2;
+    dw_1 = dw_2;
+    
+    [dx_2, dv_2, dw_2] = ode_system(x(:,:,i), v(:,:,i), w(:,i), n, alpha, beta,nabla_u, r_x, r_w, tau_red, tau_blue);
 end
 
 
@@ -122,35 +121,35 @@ time = (1:1000:size(x, 3)); % Time indices corresponding to the 1:1000:end sampl
 % Prepare figure
 figure;
 
-% Plot positions as circles in 3D space
-for tIdx = 1:length(time)
-    t = time(tIdx); % Current time index
-    plot3(x(1:n,1,t), x(1:n,2,t), t * ones(n,1), 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'none');
-    hold on;
-end
+    % Plot positions as circles in 3D space
+    for tIdx = 1:length(time)
+        t = time(tIdx); % Current time index
+        plot3(x(1:n,1,t), x(1:n,2,t), t * ones(n,1), 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'none');
+        hold on;
+    end
 
-% Plot velocities as arrows in 3D space
-for tIdx = 1:length(time)
-    t = time(tIdx); % Current time index
-    quiver3(x(1:n,1,t), x(1:n,2,t), t * ones(n,1), ...
-            v(1:n,1,t), v(1:n,2,t), zeros(n,1), 'r');
-end
+    % Plot velocities as arrows in 3D space
+    for tIdx = 1:length(time)
+        t = time(tIdx); % Current time index
+        quiver3(x(1:n,1,t), x(1:n,2,t), t * ones(n,1), ...
+                v(1:n,1,t), v(1:n,2,t), zeros(n,1), 'r');
+    end
 
-% Label axes
-xlabel('X');
-ylabel('Y');
-zlabel('Time');
+    % Label axes
+    xlabel('X');
+    ylabel('Y');
+    zlabel('Time');
 
-% Adjust plot appearance
-grid on;
-%axis equal;
-title('Velocities Over Time');
-view(3); % Use a 3D perspective
-hold off;
-set(gca,'FontSize',16)
+    % Adjust plot appearance
+    grid on;
+    %axis equal;
+    title('Velocities Over Time');
+    view(3); % Use a 3D perspective
+    hold off;
+    set(gca,'FontSize',16)
 
-% filename2 = fullfile(outputFolder, ['VelocityOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
-% saveas(gcf, filename2);
+    % filename2 = fullfile(outputFolder, ['VelocityOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
+    % saveas(gcf, filename2);
 
 
 %% Plot of the trajectories for some times
@@ -188,8 +187,11 @@ figure;
     hold off;
     set(gca,'FontSize',16)
 
-% filename3 = fullfile(outputFolder, ['PositionOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
-% saveas(gcf, filename3);
+    % filename3 = fullfile(outputFolder, ['PositionOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
+    % saveas(gcf, filename3);
+
+
+%% Plot opinion over time
 
 figure();
     plot(1:steps,w, 'k','LineWidth', 1);
@@ -203,7 +205,7 @@ figure();
 
 
 
-%% -------------------PROBLEM-RELATED FUNCTIONS------------------- %
+%% -------------------PROBLEM-RELATED FUNCTIONS-------------------
 
 function morse_potential = morse_potential(r, c_rep, c_att, l_rep, l_att)
     morse_potential = -(c_rep/l_rep)*exp(-r./l_rep) + (c_att/l_att)*exp(-r./l_att);
@@ -225,8 +227,8 @@ function [dx,dv,dw] = ode_system(x, v, w, n, alpha, beta, nabla_u, r_x, r_w, tau
     term_1 = (alpha - beta*sum(v.^2,2)) .* v;
     term_2 = -1/n * potential_sum(x,nabla_u);
 
-    term_3_red = tau_red * velocity_alignment(v,w,r_w,v_red,w_red);
-    term_3_blue = tau_blue * velocity_alignment(v,w,r_w,v_blue,w_blue);
+    term_3_red = tau_red * velocity_alignment(v,v_red,w,w_red,r_w);
+    term_3_blue = tau_blue * velocity_alignment(v,v_blue,w,w_blue,r_w);
 
     phi = opinion_alignment(x, w, n, r_x, r_w);
     
@@ -253,13 +255,13 @@ function forces = potential_sum(x, nabla_u)
 end
 
 
-function alignment = velocity_alignment(v,w1,r_w,vt,wt)
-    is_aligned = abs(w1 - wt) < r_w;
-    alignment = is_aligned .* (vt-v);
+function alignment = velocity_alignment(v, v_ref, w, w_ref, r_w)
+    bool_aligned = abs(w - w_ref) < r_w;
+    alignment = bool_aligned .* (v_ref-v);
 end
 
 
-function phi = opinion_alignment(x,w,n,r_x,r_w)
+function phi = opinion_alignment(x, w, n, r_x, r_w)
     wi = repmat(w, 1, n);
     wj = repmat(w', n, 1);    
     xi = reshape(x, [n, 1, size(x, 2)]);
