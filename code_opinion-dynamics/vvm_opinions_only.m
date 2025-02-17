@@ -169,7 +169,7 @@ function Psi = psi(X,Y,Nx,Ny, r_w) % function to compute 1
         for j = 1:Ny
             % if i ~= j                   %&& abs(X(i)-X(j))>(1+1e-13)
                 if abs(Y(j)-X(i))<r_w
-                    Psi(i) = Psi(i) +  (Y(j)-X(i)); % j-i???
+                    Psi(i) = Psi(i) +  (Y(j)-X(i));     % consultar gissell: j-i?
                 end
             % end
         end
