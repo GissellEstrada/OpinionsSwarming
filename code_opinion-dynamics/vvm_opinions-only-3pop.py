@@ -3,12 +3,12 @@ def psi(wk, wm, n_k, n_m, r_w):
     for i in range(n_k):
         for j in range(n_m):
             if abs(wm[j]-wk[i]) < r_w:
-                Psi[i] += (wm[j]-wk[i])     # j-i? [GER]
+                Psi[i] += (wm[j]-wk[i])
     return Psi
 
 
 # steps, dom, and final_avg_total are not passed as arguments 
-# nor defined inside the function. may be an issue
+# nor defined inside the function. may be an issue [VVM]
 
 def plot_opinions(ax, data, initial_avg_k, title, color, do_log=False):   
     ax.set_title(title, fontweight='bold', fontsize=16)
@@ -31,29 +31,29 @@ import matplotlib.pyplot as plt
 
 # SET PARAMETERS
 
-t_final = 20                             # final time
-dt = 1.0e-1                         # timestep
-steps = int(np.floor(t_final / dt))      # number of steps
-dom = 1                             # computational domain (w in [-dom,dom])
+t_final = 20                            # final time
+dt = 1.0e-1                             # timestep
+steps = int(np.floor(t_final / dt))     # number of steps
+dom = 1                                 # computational domain (w in [-dom,dom])
 
-n_l = 6                             # number of leaders. they prefer A
-n_f = 6                             # number of followers. they prefer B
-n_u = 10                            # number of uninformed. no preference
+n_l = 6                                 # number of leaders. they prefer A
+n_f = 6                                 # number of followers. they prefer B
+n_u = 10                                # number of uninformed. no preference
 
-w_blue = 1                         # reference opinions
+w_blue = 1                              # reference opinions
 w_red = -1
 
-p_ll, p_ff, p_uu = 1, 1, 0      # interaction strength
+p_ll, p_ff, p_uu = 1, 1, 0              # interaction strength
 p_lf = p_fl = 1
 p_lu = p_ul = 0
 p_fu = p_uf = 0
 
-tau_blue = 0.1                     # conviction
+tau_blue = 0.1                          # conviction
 tau_red = 0.1
 
-sigma = 0                       # noise parameter
+sigma = 0                               # noise parameter
 
-wl = np.zeros((n_l, steps))     # opinion vectors
+wl = np.zeros((n_l, steps))             # opinion vectors
 wf = np.zeros((n_f, steps))
 wu = np.zeros((n_u, steps))
 

@@ -44,20 +44,21 @@ tau_blue = 0.1;                     % strength of preference towards 1, blue tar
 nabla_u = @(r) morse_potential(r, c_rep, c_att, l_rep, l_att);
 
 % Initial conditions
+
 rng(1234);
 
 x_0 = -1 + 2*rand(n,2);     % n*2, initial coordinates
 v_0 = -1 + 2*rand(n,2);
 w_0 = -1 + 2*rand(n,1);     % n*1, initial values
 
-x(:,:,1) = x_0; 
-v(:,:,1) = v_0;
-w(:,1) = w_0;
-
 
 %% Integration step
 
 % Preparation: compute the first solution using Euler. Use it to compute the second system.
+
+x(:,:,1) = x_0;
+v(:,:,1) = v_0;
+w(:,1) = w_0;
 
 [dx_1, dv_1, dw_1] = ode_system(x(:,:,1), v(:,:,1), w(:,1), n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue);
 
@@ -68,11 +69,12 @@ w(:,2) = w(:,1) + dt*dw_1;
 [dx_2, dv_2, dw_2] = ode_system(x(:,:,2), v(:,:,2), w(:,2), n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue);
 
 % Adams-Bashforth 2-step method
+
 for i = 3:steps
     x(:,:,i) = x(:,:,i-1) + (dt/2) * (3*dx_2 - dx_1);
     v(:,:,i) = v(:,:,i-1) + (dt/2) * (3*dv_2 - dv_1);
     w(:,i) = w(:,i-1) + (dt/2) * (3*dw_2 - dw_1);
-    if any(isnan(x(:,:,i)), 'all') || any(isinf(x(:,:,i)), 'all')
+    if any(isnan(x(:,:,i)), 'all') || any(isinf(x(:,:,i)), 'all')       % [VVM] also v?
         error('NaN or Inf encountered at time step %d', i);
     end
 
@@ -88,9 +90,9 @@ end
 
 % Create the folder if it doesn't exist
 
-outputFolder = 'Figures_onePopNoMill';      % Folder to save the figures
-if ~exist(outputFolder, 'dir')
-    mkdir(outputFolder);
+output_folder = 'Figures_onePopNoMill';      % Folder to save the figures
+if ~exist(output_folder, 'dir')
+    mkdir(output_folder);
 end
 
 % Plot
@@ -109,7 +111,7 @@ figure()
     hold off;
     axis equal;
     set(gca,'FontSize',16)
-    % filename1 = fullfile(outputFolder, ['FinalVelocityNoMillNoPreference_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
+    % filename1 = fullfile(output_folder, ['FinalVelocityNoMillNoPreference_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
     % saveas(gcf, filename1);
 
 
@@ -148,7 +150,7 @@ figure;
     hold off;
     set(gca,'FontSize',16)
 
-    % filename2 = fullfile(outputFolder, ['VelocityOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
+    % filename2 = fullfile(output_folder, ['VelocityOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
     % saveas(gcf, filename2);
 
 
@@ -187,7 +189,7 @@ figure;
     hold off;
     set(gca,'FontSize',16)
 
-    % filename3 = fullfile(outputFolder, ['PositionOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
+    % filename3 = fullfile(output_folder, ['PositionOverTime_NL', num2str(n),'_alpha_',num2str(alpha),'_beta_',num2str(beta),'_Ca_',num2str(c_att),'_la_',num2str(l_att),'_Cr_',num2str(c_rep),'_lr_',num2str(l_rep),'_rx_',num2str(r_x),'_rw_',num2str(r_w),'_tau_blue_',num2str(tau_blue),'_tau_red_',num2str(tau_red), '.fig']);
     % saveas(gcf, filename3);
 
 
@@ -200,7 +202,7 @@ figure();
     title('Opinion Over Time');
     set(gca,'FontSize',16)
     % 
-    % filename4 = fullfile(outputFolder, ['OpinionOverTimeNoMillNoPreference', '.fig']);
+    % filename4 = fullfile(output_folder, ['OpinionOverTimeNoMillNoPreference', '.fig']);
     % saveas(gcf, filename4);
 
 
@@ -214,17 +216,15 @@ end
 
 function [dx,dv,dw] = ode_system(x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
     % x_step, v_step, w_step are x,v,w at a given step.
-    % In this case, we are considering tau = gamma. [GER]
+    % In this case, we are considering tau = gamma. [VVM]
 
-    v_blue = 1;
-    v_red = -1;
-    % v_blue = [1, 0];      [GER]
-    % v_red = [0, -1];
+    v_blue = 1;     % vector (1,1)
+    v_red = -1;     % vector (-1,-1)
 
     w_blue = 1;
     w_red = -1;
 
-    % x_blue = 1;           [GER]
+    % x_blue = 1;   
     % x_red = -1;
 
     term_1 = (alpha - beta*sum(v_step.^2,2)) .* v_step;
@@ -234,10 +234,8 @@ function [dx,dv,dw] = ode_system(x_step, v_step, w_step, n, alpha, beta, nabla_u
     term_3_blue = tau_blue * velocity_alignment(v_step,v_blue,w_step,w_blue,r_w);
 
     phi = opinion_alignment_sum(x_step, w_step, n, r_x, r_w);
-    
-    % term_3_red  = tau_red*alternative_opinion_alignment(x_step,w_step,r_w,x_red,w_red);
-    % term_3_blue = tau_blue*alternative_opinion_alignment(x_step,w_step,r_w,x_blue,w_blue);
-    % termVelAlign = 1/n * another_thing_velocity_aligment(x_step,w_step,v_step,n,r_x,r_w);
+
+    % termVelAlign = 1/n * cucker_smale_aligment(x_step,w_step,v_step,n,r_x,r_w);
     % dv = term_1 + term_2 + term_3_red + term_3_blue + 0*termVelAlign;
 
     dx = v_step;
@@ -251,13 +249,9 @@ function forces = potential_sum(x_step, nabla_u)
     xj = reshape(x_step', 1, size(x_step, 2), []); 
     z = xi - xj;
     d_ij = sqrt(sum(z.^2, 2));
-    d_ij(d_ij == 0) = 1;
-    % [GER] 2. Maybe it's better to set a threshold, since we might have two particles that
-    % [GER]    are almost at the same position, leading to unrealistic outputs.
-    % [GER] 1. Why 1? What is the length scale? Maybe we sould set a minimum particle distance,
-    % [GER]    though it may lead to change the physics.
-    forces = nabla_u(d_ij) .* z ./ d_ij;                    % [GER] falten parametres?
-    forces = squeeze(sum(forces, 3));    
+    d_ij(d_ij == 0) = 1;            % vector will be zero and result too either way
+    forces = nabla_u(d_ij) .* z ./ d_ij;
+    forces = squeeze(sum(forces, 3));
 end
 
 
@@ -277,11 +271,11 @@ function phi = opinion_alignment_sum(x_step, w_step, n, r_x, r_w)
     d_ij = sqrt(sum((z).^2, 3));   
     bool_phi = (abs(wi - wj) < r_w) & (d_ij < r_x);
     
-    phi = sum(bool_phi .* (wj - wi), 2);                % [GER] j-i?
+    phi = sum(bool_phi .* (wj - wi), 2);
 end
 
 
-% function U = another_thing_velocity_aligment(x_step,w_step,v_step,n,r_x,r_w) % this is velocity alignment as in Cucker-Smale
+% function U = cucker_smale_aligment(x_step,w_step,v_step,n,r_x,r_w) % this is velocity alignment as in Cucker-Smale
 %     wi = repmat(w_step, 1, n);
 %     wj = repmat(w_step', n, 1);    
 %     xj = reshape(x_step, [n, 1, size(x_step, 2)]);
