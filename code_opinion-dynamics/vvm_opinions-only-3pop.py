@@ -1,3 +1,8 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+
 def psi(wk, wm, n_k, n_m, r_w):
     Psi = np.zeros(n_k)
     for i in range(n_k):
@@ -25,9 +30,6 @@ def plot_opinions(ax, data, initial_avg_k, title, color, do_log=False):
     ax.plot(range(steps), [final_avg_total] * steps, color=colors['gray'], linewidth=2)
 
 
-
-import numpy as np
-import matplotlib.pyplot as plt
 
 # SET PARAMETERS
 
