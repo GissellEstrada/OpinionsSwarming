@@ -11,10 +11,9 @@ Nf = 6;              % individuals with preference for b (opinion is -1), follow
 Nu = 10;             % individuals without any preference
 
 % strength of the interaction opinions
-p_ll = 1; 
-p_lf = 1; p_lu = 0; 
+p_ll = 1; p_lf = 1; p_lu = 0; 
 p_fl = 1; p_ff = 1; p_fu = 0;
-p_ul = 0; p_uf = 0; p_uu = 0;
+p_ul = 0; p_uf = 0; p_uu = 1;
 
 tau_a = 0.1;                   % conviction of leaders towards opinion 1
 tau_b = 0.1;                   % conviction of followers towards opinion -1
@@ -30,7 +29,7 @@ wu = zeros(Nu,M);
 
 %% initialise positions and speeds randomly
 
-rng(1234);
+% rng(1234);
 
 % xa(:,1) = sort(L*rand(1,Na));
 % xb(:,1) = sort(L*rand(1,Nb));
@@ -109,15 +108,15 @@ for k = 1:M-1
 end
 
 
-figure
-subplot(1,2,1)
-plot(1:M,energ,'LineWidth',2)
-title('Energy')
-set(gca,'FontSize',15); hold on
-subplot(1,2,2)
-plot(1:M-1,var_energ,'LineWidth',2)
-title('Energy variation')
-set(gca,'FontSize',15);
+% figure
+% subplot(1,2,1)
+% plot(1:M,energ,'LineWidth',2)
+% title('Energy')
+% set(gca,'FontSize',15); hold on
+% subplot(1,2,2)
+% plot(1:M-1,var_energ,'LineWidth',2)
+% title('Energy variation')
+% set(gca,'FontSize',15);
 
 finalAv_a = sum(wl(:,end))/Nl;
 finalAv_b = sum(wf(:,end))/Nf;

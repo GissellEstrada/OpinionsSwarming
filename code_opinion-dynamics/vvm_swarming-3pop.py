@@ -114,8 +114,8 @@ x = np.zeros((steps, n, 2))
 v = np.zeros((steps, n, 2))
 w = np.zeros((steps, n))
 
-r_x = 1
-r_w = 0.5
+r_x = 0.5
+r_w = 1
 alpha = 1
 beta = 0.5
 gammas_red = [1, 1, 0]
