@@ -103,7 +103,7 @@ def opinion_alignment_sum(x1, x2, w1, w2, r_x, r_w):
 
 n_l = 20
 n_f = 50
-n_u = 50                                   # we need to change n_u=2, 20, 80n = n_l + n_f + n_u
+n_u = 50
 n = n_l + n_f + n_u
 
 t_final = 100
@@ -114,8 +114,8 @@ x = np.zeros((steps, n, 2))
 v = np.zeros((steps, n, 2))
 w = np.zeros((steps, n))
 
-r_x = 0.5
-r_w = 1
+r_x = 1
+r_w = 0.5
 alpha = 1
 beta = 0.5
 gammas_red = [1, 1, 0]
@@ -161,7 +161,7 @@ for i in range(1, steps-1):
 
 # --------------------------------------------------
 # --------------------------------------------------
-output_folder = 'figures/swarming-3pop'
+output_folder = 'figures/full-swarming'
 os.makedirs(output_folder, exist_ok=True)
 
 
@@ -172,58 +172,59 @@ plt.plot(x[-1, :n_l, 0], x[-1, :n_l, 1], 'o', c='b')
 plt.plot(x[-1, n_l:n_l+n_f, 0], x[-1, n_l:n_l+n_f, 1], 'o', c='r')
 plt.plot(x[-1, n_l+n_f:n, 0], x[-1, n_l+n_f:n, 1], 'o', c='k')
 plt.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r')
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.grid(True)
-plt.title('Velocities at the final time')
+plt.xlabel('x', fontsize=14)
+plt.ylabel('y', fontsize=14)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.grid(False)
+plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
 plt.axis('equal')
 
-# plt.savefig(os.path.join(output_folder, f'3PopOp_WithUninformed_FLUInteraction_case2_NL{n_l}_alpha_{alpha}_beta_{beta}_Ca_{c_att}_la_{l_att}_Cr_{c_rep}_lr_{l_rep}_rx_{r_x}_rw_{r_w}_taur_{tau_blue_l}_taub_{tau_red_f}.png'))
 output_file = os.path.join(output_folder, 'final_velocity_configuration.svg')
 plt.savefig(output_file)
 
 plt.show()
 
 
-# PLOT: velocities over time
+# # PLOT: velocities over time
 
-time = np.arange(1, x.shape[0], 1000)  # Time indices corresponding to the 1:1000:end sampling
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for t in time:
-    ax.scatter(x[t, :, 0], x[t, :, 1], np.full(n, t), c='b', marker='o', edgecolors='b')
-for t in time:
-    ax.quiver(x[t, :, 0], x[t, :, 1], np.full(n, t), v[t, :, 0], v[t, :, 1], np.zeros(n), color='r', length=0.15)
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('step')
-ax.set_title('Velocities Over Time')
-plt.grid(True)
+# time = np.arange(1, x.shape[0], 1000)  # Time indices corresponding to the 1:1000:end sampling
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# for t in time:
+#     ax.scatter(x[t, :, 0], x[t, :, 1], np.full(n, t), c='b', marker='o', edgecolors='b')
+# for t in time:
+#     ax.quiver(x[t, :, 0], x[t, :, 1], np.full(n, t), v[t, :, 0], v[t, :, 1], np.zeros(n), color='r', length=0.15)
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('step')
+# ax.set_title('Velocities Over Time')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'velocities_over_time.svg')
-plt.savefig(output_file)
+# output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+# plt.savefig(output_file)
 
-plt.show()
+# plt.show()
 
 
-# PLOT: positions over time
+# # PLOT: positions over time
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for t in time:
-    ax.scatter(x[t, :n_l, 0], x[t, :n_l, 1], np.full(n_l, t), c='b', marker='o', edgecolors='b')
-    ax.scatter(x[t, n_l:n_l+n_f, 0], x[t, n_l:n_l+n_f, 1], np.full(n_f, t), c='r', marker='o', edgecolors='r')
-    ax.scatter(x[t, n_l+n_f:n, 0], x[t, n_l+n_f:n, 1], np.full(n_u, t), c='k', marker='o', edgecolors='k')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('step')
-ax.set_title('Position Over Time')
-plt.grid(True)
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# for t in time:
+#     ax.scatter(x[t, :n_l, 0], x[t, :n_l, 1], np.full(n_l, t), c='b', marker='o', edgecolors='b')
+#     ax.scatter(x[t, n_l:n_l+n_f, 0], x[t, n_l:n_l+n_f, 1], np.full(n_f, t), c='r', marker='o', edgecolors='r')
+#     ax.scatter(x[t, n_l+n_f:n, 0], x[t, n_l+n_f:n, 1], np.full(n_u, t), c='k', marker='o', edgecolors='k')
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('step')
+# ax.set_title('Position Over Time')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'positions_over_time.svg')
-plt.savefig(output_file)
+# output_file = os.path.join(output_folder, 'positions_over_time.svg')
+# plt.savefig(output_file)
 
-plt.show()
+# plt.show()
 
 
 # PLOT: opinion over time
@@ -232,74 +233,75 @@ plt.figure()
 plt.plot(range(steps), w[:, :n_l], 'b', linewidth=1.5)
 plt.plot(range(steps), w[:, n_l:n_l+n_f], 'r', linewidth=1.5)
 plt.plot(range(steps), w[:, n_l+n_f:], 'k', linewidth=1.5)
-plt.xlabel('Step')
-plt.ylabel('Opinion')
+plt.xlabel('Step', fontsize=14)
+plt.ylabel('Opinion', fontsize=14)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
 plt.title('Opinion Over Time')
-plt.grid(True)
+plt.grid(False)
 
-# plt.savefig(os.path.join(output_folder, f'OpinionEvol_WithUninformed_FLUInteraction_case2_NL{n_l}_alpha_{alpha}_beta_{beta}_Ca_{c_att}_la_{l_att}_Cr_{c_rep}_lr_{l_rep}_rx_{r_x}_rw_{r_w}_taur_{tau_blue_l}_taub_{tau_red_f}.png'))
-output_file = os.path.join(output_folder, 'opinion_over_time.svg')
+output_file = os.path.join(output_folder, 'opinion.svg')
 plt.savefig(output_file)
 
 plt.show()
 
 
-# PLOT: mean velocities over time
+# # PLOT: mean velocities over time
 
-mean_vx_time = np.mean(v[:, :, 0], axis=1)
-mean_vy_time = np.mean(v[:, :, 1], axis=1)
-time = np.arange(v.shape[0])
+# mean_vx_time = np.mean(v[:, :, 0], axis=1)
+# mean_vy_time = np.mean(v[:, :, 1], axis=1)
+# time = np.arange(v.shape[0])
 
-plt.figure()
+# plt.figure()
 
-plt.subplot(2, 1, 1)
-plt.plot(time, mean_vx_time, 'b-', linewidth=2)
-plt.xlabel('Steps')
-plt.ylabel('Mean V_x')
-plt.title('Mean Velocity Component V_x Over Time')
-plt.grid(True)
+# plt.subplot(2, 1, 1)
+# plt.plot(time, mean_vx_time, 'b-', linewidth=2)
+# plt.xlabel('Steps')
+# plt.ylabel('Mean V_x')
+# plt.title('Mean Velocity Component V_x Over Time')
+# plt.grid(True)
 
-plt.subplot(2, 1, 2)
-plt.plot(time, mean_vy_time, 'r-', linewidth=2)
-plt.xlabel('Steps')
-plt.ylabel('Mean V_y')
-plt.title('Mean Velocity Component V_y Over Time')
-plt.grid(True)
+# plt.subplot(2, 1, 2)
+# plt.plot(time, mean_vy_time, 'r-', linewidth=2)
+# plt.xlabel('Steps')
+# plt.ylabel('Mean V_y')
+# plt.title('Mean Velocity Component V_y Over Time')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'mean_velocities.svg')
-plt.savefig(output_file)
+# output_file = os.path.join(output_folder, 'mean_velocities.svg')
+# plt.savefig(output_file)
 
-plt.show()
-
-
-# PLOT: mean opinion over time
-
-mean_opinion = np.mean(w, axis=1)
-plt.figure()
-plt.plot(time, mean_opinion, 'k', linewidth=1.5)
-plt.xlabel('Steps')
-plt.ylabel('Mean Opinion')
-plt.title('Mean Opinion of the Whole Population')
-plt.grid(True)
-
-output_file = os.path.join(output_folder, 'mean_opinion.svg')
-plt.savefig(output_file)
-
-plt.show()
+# plt.show()
 
 
-# PLOT: mean velocity magnitude
+# # PLOT: mean opinion over time
 
-mean_velocity_magnitude = np.sqrt(mean_vx_time**2 + mean_vy_time**2)
-plt.figure()
-plt.plot(time, mean_velocity_magnitude, 'k-', linewidth=2)
-plt.xlabel('Steps')
-plt.ylabel('Mean Velocity Magnitude')
-plt.title('Mean Velocity Magnitude Over Time')
-plt.grid(True)
+# mean_opinion = np.mean(w, axis=1)
+# plt.figure()
+# plt.plot(time, mean_opinion, 'k', linewidth=1.5)
+# plt.xlabel('Steps')
+# plt.ylabel('Mean Opinion')
+# plt.title('Mean Opinion of the Whole Population')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'mean_velocity_magnitude.svg')
-plt.savefig(output_file)
+# output_file = os.path.join(output_folder, 'mean_opinion.svg')
+# plt.savefig(output_file)
 
-plt.show()
+# plt.show()
+
+
+# # PLOT: mean velocity magnitude
+
+# mean_velocity_magnitude = np.sqrt(mean_vx_time**2 + mean_vy_time**2)
+# plt.figure()
+# plt.plot(time, mean_velocity_magnitude, 'k-', linewidth=2)
+# plt.xlabel('Steps')
+# plt.ylabel('Mean Velocity Magnitude')
+# plt.title('Mean Velocity Magnitude Over Time')
+# plt.grid(True)
+
+# output_file = os.path.join(output_folder, 'mean_velocity_magnitude.svg')
+# plt.savefig(output_file)
+
+# plt.show()
 

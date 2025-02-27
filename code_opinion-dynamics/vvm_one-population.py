@@ -5,14 +5,14 @@ import os
 
 
 def nabla_morse_potential(r, c_rep, c_att, l_rep, l_att):
-    return -(c_rep / l_rep) * np.exp(-r / l_rep) + (c_att / l_att) * np.exp(-r / l_att)
+    return -(c_rep/l_rep) * np.exp(-r/l_rep) + (c_att/l_att) * np.exp(-r/l_att)
 
 
 def ode_system(x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue):
     v_blue, v_red = 1, -1       # (1,1) and (-1,-1)
     w_blue, w_red = 1, -1
 
-    term_1 = (alpha - beta * np.sum(v_step**2, axis=1))[:, np.newaxis] * v_step
+    term_1 = (alpha - beta*np.sum(v_step**2, axis=1))[:, np.newaxis] * v_step
 
     term_2 = - potential_sum(x_step, nabla_u) / n
 
@@ -30,18 +30,20 @@ def ode_system(x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_re
 
 
 def potential_sum(x_step, nabla_u):
-    # Compute m*m*2 matrix where x_diff(i,j) = x_i - x_j
+    # Compute m*m*2 matrix where x_diff(i,j) = x_j - x_i
     # (each element of the matrix is a point in R^2)
-    x_diff = x_step[:, np.newaxis, :] - x_step[np.newaxis, :, :]
+    xi = x_step[:, np.newaxis, :]
+    xj = x_step[np.newaxis, :, :]
+    x_diff = xi - xj
 
     # Compute norm of the elements x_diff(i,j), d_ij is an m*m matrix
     d_ij = np.linalg.norm(x_diff, axis=2)
     d_ij[d_ij == 0] = 1
 
-    # Derive forces(i,j) = nabla_u(|x_i-x_j|), m*m*2 matrix, "chain rule"
+    # Derive forces(i,j) = nabla_u(|x_j-x_i|), m*m*2 matrix, "chain rule"
     forces = nabla_u(d_ij)[:, :, np.newaxis] * x_diff / d_ij[:, :, np.newaxis]
 
-    # Return array m*2 such that sum_forces(i) = sum_{j} nabla_u(|x_i-x_j|)
+    # Return array m*2 such that sum_forces(i) = sum_{j} nabla_u(|x_j-x_i|)
     sum_forces = np.sum(forces, axis=1)
     return sum_forces
 
@@ -54,8 +56,8 @@ def velocity_alignment(v_step, v_ref, w_step, w_ref, r_w):
 
 
 def opinion_alignment_sum(x_step, w_step, n, r_x, r_w):
-    wi = np.tile(w_step, (n, 1))
-    wj = wi.T
+    wi = w_step[:, np.newaxis]
+    wj = w_step[np.newaxis, :]
     xi = x_step[:, np.newaxis, :]
     xj = x_step[np.newaxis, :, :]
 
@@ -68,58 +70,32 @@ def opinion_alignment_sum(x_step, w_step, n, r_x, r_w):
     return phi_sum
 
 
-parameter_combinations = {
-    '1': {
-        'r_x': 0.5,
-        'r_w': 1,
-        'alpha': 1,
-        'beta': 5,
-        'tau_blue': 0.1,
-        'tau_red': 0.1,
-        'c_att': 100,
-        'l_att': 1.2,
-        'c_rep': 350,
-        'l_rep': 0.8
-    },
-    '2': {
-        'r_x': 0.5,
-        'r_w': 1,
-        'alpha': 1,
-        'beta': 5,
-        'tau_blue': 0.1,
-        'tau_red': 0.1,
-        'c_att': 100,
-        'l_att': 1.2,
-        'c_rep': 350,
-        'l_rep': 0.8
-    },
-}
-
-
-
-# --------------------------------------------------
-# --------------------------------------------------
-# PROBLEM DATA
-
-t_final = 100
-dt = 1.0e-2
-steps = int(np.floor(t_final / dt))
-
-n = 100
-x = np.zeros((steps, n, 2))
-v = np.zeros((steps, n, 2))
-w = np.zeros((steps, n))
-
-r_x = 0.5
-r_w = 1
-alpha = 1
-beta = 5
-tau_blue = 0.1
-tau_red = 0.1
-c_att = 100
-l_att = 1.2
-c_rep = 350
-l_rep = 0.8
+# parameter_combinations = {
+#     '1': {
+#         'r_x': 0.5,
+#         'r_w': 1,
+#         'alpha': 1,
+#         'beta': 5,
+#         'tau_blue': 0.1,
+#         'tau_red': 0.1,
+#         'c_att': 100,
+#         'l_att': 1.2,
+#         'c_rep': 350,
+#         'l_rep': 0.8
+#     },
+#     '2': {
+#         'r_x': 0.5,
+#         'r_w': 1,
+#         'alpha': 1,
+#         'beta': 5,
+#         'tau_blue': 0.1,
+#         'tau_red': 0.1,
+#         'c_att': 100,
+#         'l_att': 1.2,
+#         'c_rep': 350,
+#         'l_rep': 0.8
+#     },
+# }
 
 # choice = input("Choose an option: 1, 2, 3, 4 or 5): ")
 
@@ -140,6 +116,43 @@ l_rep = 0.8
 #     print(f"You selected option {choice}")
 # else:
 #     print("Invalid option. Exiting.")
+
+
+# --------------------------------------------------
+# --------------------------------------------------
+# PROBLEM DATA
+
+t_final = 100
+dt = 1.0e-2
+steps = int(np.floor(t_final / dt))
+
+n = 100
+x = np.zeros((steps, n, 2))
+v = np.zeros((steps, n, 2))
+w = np.zeros((steps, n))
+
+# # Case II
+# alpha = 1
+# beta = 0.5
+# c_att = 50
+# l_att = 1
+# c_rep = 60
+# l_rep = 0.5
+# r_x = 1
+# r_w = 0.5
+
+# Case VIII
+alpha = 1
+beta = 5
+c_att = 100
+l_att = 1.2
+c_rep = 350
+l_rep = 0.8
+r_x = 0.5
+r_w = 1
+
+tau_blue = 0
+tau_red = 0
 
 nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
 
@@ -185,67 +198,69 @@ os.makedirs(output_folder, exist_ok=True)
 plt.figure()
 plt.scatter(x[-1, :, 0], x[-1, :, 1], color='b', label='Positions')
 plt.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r', label='Velocities')
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.grid(True)
-plt.title('Velocities at the final time')
+plt.xlabel('x', fontsize=14)
+plt.ylabel('y', fontsize=14)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.grid(False)
+plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
 plt.axis('equal')
 plt.legend()
 
-output_file = os.path.join(output_folder, 'final_velocity_configuration.svg')
+output_file = os.path.join(output_folder, 'velocities.svg')
 plt.savefig(output_file)
-
-plt.show()
+# plt.show()
 
 
 # PLOT: opinion over time
 
 plt.figure()
 plt.plot(range(steps), w, 'k')
-plt.xlabel('steps')
-plt.ylabel('Opinion')
-plt.title('Opinion Over Time')
-plt.grid(True)
+plt.xlabel('steps', fontsize=14)
+plt.ylabel('Opinion', fontsize=14)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.title('Opinion Over Time', fontsize=16, fontweight='bold')
+plt.grid(False)
 
-output_file = os.path.join(output_folder, 'opinion_over_time.svg')
+output_file = os.path.join(output_folder, 'opinion.svg')
 plt.savefig(output_file)
-
-plt.show()
-
-
-# PLOT: velocities over time
-
-time_indices = np.arange(0, steps, 1000)
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for t in time_indices:
-    ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
-    ax.quiver(x[t, :, 0], x[t, :, 1], t, v[t, :, 0], v[t, :, 1], 0, color='r', length=6, linewidth=1)
-    ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('steps')
-ax.set_title('Velocities Over Time')
-plt.grid(True)
-
-output_file = os.path.join(output_folder, 'velocities_over_time.svg')
-plt.savefig(output_file)
-
-plt.show()
+# plt.show()
 
 
-# PLOT: positions over time
+# # PLOT: velocities over time
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for t in time_indices:
-    ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('steps')
-ax.set_title('Position Over Time')
-plt.grid(True)
+# time_indices = np.arange(0, steps, 1000)
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# for t in time_indices:
+#     ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
+#     ax.quiver(x[t, :, 0], x[t, :, 1], t, v[t, :, 0], v[t, :, 1], 0, color='r', length=6, linewidth=1)
+#     ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('steps')
+# ax.set_title('Velocities Over Time')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'positions_over_time.svg')
-plt.savefig(output_file)
+# output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+# plt.savefig(output_file)
 
-plt.show()
+# # plt.show()
+
+
+# # PLOT: positions over time
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# for t in time_indices:
+#     ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('steps')
+# ax.set_title('Position Over Time')
+# plt.grid(True)
+
+# output_file = os.path.join(output_folder, 'positions_over_time.svg')
+# plt.savefig(output_file)
+
+# # plt.show()

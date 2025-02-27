@@ -30,13 +30,34 @@ x = zeros(n, 2, steps);
 v = zeros(n, 2, steps);
 w = zeros(n, steps);
 
-alpha = 1; beta = 5;
-r_x = 0.5;                          % spatial radius for alignment in velocity
-r_w = 1;                            % preference radius for alignment il velocity
-c_att = 100; l_att = 1.2;
-c_rep = 350; l_rep = 0.8;
-tau_red = 0.1;                      % strength of preference towards -1, red target
-tau_blue = 0.1;                     % strength of preference towards 1, blue target
+% Case II
+alpha = 1;
+beta = 0.5;
+c_att = 50;
+l_att = 1;
+c_rep = 60;
+l_rep = 0.5;
+
+% % Case VIII
+% alpha = 1;
+% beta = 5;
+% c_att = 100;
+% l_att = 1.2;
+% c_rep = 350;
+% l_rep = 0.8;
+
+r_x = 0.5;
+r_w = 1;
+tau_blue = 0;
+tau_red = 0;
+
+% alpha = 0.1; beta = 5;
+% r_x = 0.5;                          % spatial radius for alignment in velocity
+% r_w = 1;                            % preference radius for alignment il velocity
+% c_att = 100; l_att = 1.2;
+% c_rep = 350; l_rep = 0.8;
+% tau_red = 0.1;                      % strength of preference towards -1, red target
+% tau_blue = 0.1;                     % strength of preference towards 1, blue target
 
 nabla_u = @(r) morse_potential(r, c_rep, c_att, l_rep, l_att);
 
@@ -70,7 +91,7 @@ w(:,2) = w(:,1) + dt*dw_1;
 for i = 3:steps
     x(:,:,i) = x(:,:,i-1) + (dt/2) * (3*dx_2 - dx_1);
     v(:,:,i) = v(:,:,i-1) + (dt/2) * (3*dv_2 - dv_1);
-    w(:,i) = w(:,i-1) + (dt/2) * (3*dw_2 - dw_1);
+    w(:,i) = w(:,i-1)     + (dt/2) * (3*dw_2 - dw_1);
     if any(isnan(x(:,:,i)), 'all') || any(isinf(x(:,:,i)), 'all')       % [VVM] also v?
         error('NaN or Inf encountered at time step %d', i);
     end
@@ -230,14 +251,14 @@ function [dx,dv,dw] = ode_system(x_step, v_step, w_step, n, alpha, beta, nabla_u
     term_3_red = tau_red * velocity_alignment(v_step,v_red,w_step,w_red,r_w);
     term_3_blue = tau_blue * velocity_alignment(v_step,v_blue,w_step,w_blue,r_w);
 
-    phi = opinion_alignment_sum(x_step, w_step, n, r_x, r_w);
+    phi_sum = opinion_alignment_sum(x_step, w_step, n, r_x, r_w);
 
     % termVelAlign = 1/n * cucker_smale_aligment(x_step,w_step,v_step,n,r_x,r_w);
     % dv = term_1 + term_2 + term_3_red + term_3_blue + 0*termVelAlign;
 
     dx = v_step;
     dv = term_1 + term_2 + term_3_red + term_3_blue;
-    dw = phi / n + tau_red * (w_red-w_step) + tau_blue * (w_blue-w_step); 
+    dw = phi_sum/n + tau_red*(w_red-w_step) + tau_blue*(w_blue-w_step); 
 end
 
 
@@ -258,17 +279,18 @@ function alignment = velocity_alignment(v_step, v_ref, w_step, w_ref, r_w)
 end
 
 
-function phi = opinion_alignment_sum(x_step, w_step, n, r_x, r_w)
+function phi_sum = opinion_alignment_sum(x_step, w_step, n, r_x, r_w)
     wi = repmat(w_step, 1, n);
     wj = repmat(w_step', n, 1);    
     xi = reshape(x_step, [n, 1, size(x_step, 2)]);
     xj = reshape(x_step, [1, n, size(x_step, 2)]);
 
-    z  = xi - xj;
-    d_ij = sqrt(sum((z).^2, 3));   
-    bool_phi = (abs(wi - wj) < r_w) & (d_ij < r_x);
+    x_diff  = xi - xj;
+    w_diff = wj - wi;
+    d_ij = sqrt(sum((x_diff).^2, 3));   
     
-    phi = sum(bool_phi .* (wj - wi), 2);
+    bool_phi = (abs(w_diff) < r_w) & (d_ij < r_x);
+    phi_sum = sum(bool_phi.*w_diff, 2);
 end
 
 
