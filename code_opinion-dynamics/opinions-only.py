@@ -43,10 +43,10 @@ n_u = 10                                # number of uninformed. no preference
 w_blue = 1                              # reference opinions
 w_red = -1
 
-# Example 1
-p_ll, p_lf, p_lu = 1, 1, 0
-p_fl, p_ff, p_fu = 1, 1, 0
-p_ul, p_uf, p_uu = 0, 0, 1
+# # Example 1
+# p_ll, p_lf, p_lu = 1, 1, 0
+# p_fl, p_ff, p_fu = 1, 1, 0
+# p_ul, p_uf, p_uu = 0, 0, 1
 
 # # Example 2
 # p_ll, p_lf, p_lu = 1, 1, 1
@@ -58,10 +58,10 @@ p_ul, p_uf, p_uu = 0, 0, 1
 # p_fl, p_ff, p_fu = 1, 1, 1
 # p_ul, p_uf, p_uu = 1, 1, 1
 
-# # Example 4
-# p_ll, p_lf, p_lu = 1, 1, 1
-# p_fl, p_ff, p_fu = 1, 1, 1
-# p_ul, p_uf, p_uu = 0, 0, 0
+# Example 4
+p_ll, p_lf, p_lu = 1, 1, 0
+p_fl, p_ff, p_fu = 1, 1, 0
+p_ul, p_uf, p_uu = 0, 0, 0
 
 r_w = 1
 
@@ -126,7 +126,7 @@ plot_opinions(axes[1], w_f, np.mean(w_f[0]), final_avg_total, steps, dom, "Follo
 plot_opinions(axes[2], w_u, np.mean(w_u[0]), final_avg_total, steps, dom, "Uninformed", 'k')
 plt.tight_layout()
 
-output_file = os.path.join(output_folder, 'opinions_only.eps')
+output_file = os.path.join(output_folder, 'opinions_only.svg')
 plt.savefig(output_file)
 
 plt.show()

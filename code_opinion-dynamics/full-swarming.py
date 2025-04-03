@@ -34,7 +34,7 @@ def ode_system(x_step, v_step, w_step, n_l, n_f, n_u,
     for i in range(3):
         term_1 = (alpha - beta * np.sum(vs[i] ** 2, axis=1, keepdims=True)) * vs[i]
 
-        term_2 = sum(ks[i,j] * potential_sum(xs[i], xs[j], nabla_u) / ns[j] for j in range(3))
+        term_2 = sum(potential_sum(xs[i], xs[j], nabla_u) / ns[j] for j in range(3))
         
         term_3 = gammas_blue[i] * velocity_alignment(vs[i], v_blue, ws[i], w_blue, r_w) \
                     + gammas_red[i] * velocity_alignment(vs[i], v_red, ws[i], w_red, r_w)
@@ -46,9 +46,9 @@ def ode_system(x_step, v_step, w_step, n_l, n_f, n_u,
         for j in range(3):
             phis[i,j] = ks[i,j] * opinion_alignment_sum(xs[i], xs[j], ws[i], ws[j], r_x, r_w) / ns[j]
 
-    dw_l = phis[0,0] + phis[0,1] + 0*phis[0,2] - tau_blue_l * (ws[0]-w_blue)
-    dw_f = phis[1,1] + phis[1,0] + phis[1,2] - tau_red_f * (ws[1]-w_red)
-    dw_u = 0*phis[2,2] + 0*phis[2,1] + 0*phis[2,0]
+    dw_l = phis[0,0] + phis[0,1] + phis[0,2] - tau_blue_l * (ws[0]-w_blue)
+    dw_f = phis[1,0] + phis[1,1] + phis[1,2] - tau_red_f * (ws[1]-w_red)
+    dw_u = phis[2,0] + phis[2,1] + phis[2,2]
     
     dx = np.vstack(vs)
     dv = np.vstack(dvs)
@@ -104,7 +104,7 @@ def opinion_alignment_sum(x1, x2, w1, w2, r_x, r_w):
 n_l = 20
 n_f = 50
 # n_u = 50
-n_u = 0
+n_u = 20
 n = n_l + n_f + n_u
 
 t_final = 100
@@ -124,15 +124,15 @@ gammas_red = [1, 1, 0]
 gammas_blue = [1, 1, 0]
 
 ks = np.array([
-    [1, 1, 1],  # ll lf lu
+    [1, 1, 0],  # ll lf lu
     [1, 1, 1],  # fl ff fu
-    [1, 1, 1]   # ul uf uu
+    [0, 0, 1]   # ul uf uu
 ])
 
-tau_blue_l = 0
-tau_red_f = 0
-# tau_blue_l = 0.1
-# tau_red_f = 0.01
+# tau_blue_l = 0
+# tau_red_f = 0
+tau_blue_l = 0.1
+tau_red_f = 0.01
 
 c_att, l_att = 50, 1
 c_rep, l_rep = 60, 0.5
@@ -142,6 +142,7 @@ nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
 # INTEGRATION STEP
 
 # np.random.seed(4321)
+# np.random.seed(2468)
 np.random.seed(1234)
 
 # [VVM] why is this the domain
@@ -208,7 +209,7 @@ plt.xlabel('Step', fontsize=14)
 plt.ylabel('Opinion', fontsize=14)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
-plt.title('Opinion Over Time')
+plt.title('Opinion Over Time', fontsize=16, fontweight='bold')
 plt.grid(False)
 
 output_file = os.path.join(output_folder, 'opinion.svg')
