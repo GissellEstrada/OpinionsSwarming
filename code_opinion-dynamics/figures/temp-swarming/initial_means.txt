@@ -1,0 +1,5 @@
+Initial conditions means
+-------------------------
+Mean position (x): -0.0341, 0.0805
+Mean velocity (v): -0.0167, 0.1423
+Mean opinion (w): 0.0000

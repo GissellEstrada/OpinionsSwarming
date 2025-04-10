@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 
 
 
+# -----------------------------
+# FUNCTIONS
+# -----------------------------
+
 def psi_sum(wk, wm, n_k, n_m, r_w):
     psi = np.zeros(n_k)
     for i in range(n_k):
@@ -29,7 +33,9 @@ def plot_opinions(ax, data, initial_avg_k, final_avg_total, steps, dom, title, c
 
 
 
+# -----------------------------
 # SET PARAMETERS
+# -----------------------------
 
 t_final = 20                            # final time
 dt = 1.0e-1                             # timestep
@@ -44,24 +50,24 @@ w_blue = 1                              # reference opinions
 w_red = -1
 
 # # Example 1
-# p_ll, p_lf, p_lu = 1, 1, 0
-# p_fl, p_ff, p_fu = 1, 1, 0
-# p_ul, p_uf, p_uu = 0, 0, 1
+# k_ll, k_lf, k_lu = 1, 1, 0
+# k_fl, k_ff, k_fu = 1, 1, 0
+# k_ul, k_uf, k_uu = 0, 0, 1
 
 # # Example 2
-# p_ll, p_lf, p_lu = 1, 1, 1
-# p_fl, p_ff, p_fu = 1, 1, 1
-# p_ul, p_uf, p_uu = 0, 0, 1
+# k_ll, k_lf, k_lu = 1, 1, 1
+# k_fl, k_ff, k_fu = 1, 1, 1
+# k_ul, k_uf, k_uu = 0, 0, 1
 
 # # Example 3
-# p_ll, p_lf, p_lu = 1, 1, 1
-# p_fl, p_ff, p_fu = 1, 1, 1
-# p_ul, p_uf, p_uu = 1, 1, 1
+# k_ll, k_lf, k_lu = 1, 1, 1
+# k_fl, k_ff, k_fu = 1, 1, 1
+# k_ul, k_uf, k_uu = 1, 1, 1
 
 # Example 4
-p_ll, p_lf, p_lu = 1, 1, 0
-p_fl, p_ff, p_fu = 1, 1, 0
-p_ul, p_uf, p_uu = 0, 0, 0
+k_ll, k_lf, k_lu = 1, 1, 0
+k_fl, k_ff, k_fu = 1, 1, 1
+k_ul, k_uf, k_uu = 0, 0, 0
 
 r_w = 1
 
@@ -70,12 +76,15 @@ tau_red = 0.1
 
 sigma = 0                               # noise parameter
 
+
+
+# -----------------------------
+# SIMULATION
+# -----------------------------
+
 w_l = np.zeros((steps, n_l))            # opinion vectors
 w_f = np.zeros((steps, n_f))
 w_u = np.zeros((steps, n_u))
-
-
-# INITIALIZE POSITIONS
 
 np.random.seed(1234)
 
@@ -96,16 +105,19 @@ for k in range(steps - 1):
     psi_uf = psi_sum(w_u[k], w_f[k], n_u, n_f, r_w)
     
     # integration step
-    dw_l = p_ll*psi_ll/n_l + p_lf*psi_lf/n_f + p_lu*psi_lu/n_u + tau_blue * (dom*w_blue - w_l[k])
-    dw_f = p_fl*psi_fl/n_l + p_ff*psi_ff/n_f + p_fu*psi_fu/n_u + tau_red * (dom*w_red - w_f[k])
-    dw_u = p_ul*psi_ul/n_l + p_uf*psi_uf/n_f + p_uu*psi_uu/n_u
+    dw_l = k_ll*psi_ll/n_l + k_lf*psi_lf/n_f + k_lu*psi_lu/n_u + tau_blue * (dom*w_blue - w_l[k])
+    dw_f = k_fl*psi_fl/n_l + k_ff*psi_ff/n_f + k_fu*psi_fu/n_u + tau_red * (dom*w_red - w_f[k])
+    dw_u = k_ul*psi_ul/n_l + k_uf*psi_uf/n_f + k_uu*psi_uu/n_u
 
     w_l[k+1] = w_l[k] + dt * dw_l
     w_f[k+1] = w_f[k] + dt * dw_f
     w_u[k+1] = w_u[k] + dt * dw_u
 
 
-# PLOT THE RESULTS
+
+# -----------------------------
+# PLOTS
+# -----------------------------
 
 final_avg_total = (np.sum(w_l[-1]) + np.sum(w_f[-1]) + np.sum(w_u[-1])) / (n_l + n_f + n_u)
 
@@ -129,4 +141,4 @@ plt.tight_layout()
 output_file = os.path.join(output_folder, 'opinions_only.svg')
 plt.savefig(output_file)
 
-plt.show()
+# plt.show()

@@ -1,8 +1,14 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 
+
+
+# --------------------------------------------------
+# FUNCTIONS
+# --------------------------------------------------
 
 def nabla_morse_potential(r, c_rep, c_att, l_rep, l_att):
     return -(c_rep / l_rep) * np.exp(-r / l_rep) + (c_att / l_att) * np.exp(-r / l_att)
@@ -38,7 +44,6 @@ def ode_system(x_step, v_step, w_step, n_l, n_f, n_u,
         
         term_3 = gammas_blue[i] * velocity_alignment(vs[i], v_blue, ws[i], w_blue, r_w) \
                     + gammas_red[i] * velocity_alignment(vs[i], v_red, ws[i], w_red, r_w)
-                    
         dvs[i] = term_1 + term_2 + term_3
 
     phis = np.empty((3, 3), dtype=object)
@@ -93,18 +98,19 @@ def opinion_alignment_sum(x1, x2, w1, w2, r_x, r_w):
 
 
 
+# --------------------------------------------------
+# PROBLEM DATA
+# --------------------------------------------------
+
 # Other possible parameters. Changing tau_red and tau_blue also gives very rich dynamics
 # alpha = 1; beta = 5;
 # c_att = 100; l_att = 1.2; c_rep = 350; l_rep = 0.8; 
 # l_att = 2.2
 
-
-# PROBLEM DATA
-
 n_l = 20
 n_f = 50
 # n_u = 50
-n_u = 20
+n_u = 0
 n = n_l + n_f + n_u
 
 t_final = 100
@@ -120,32 +126,43 @@ r_x = 1
 r_w = 0.5
 alpha = 1
 beta = 0.5
+
 gammas_red = [1, 1, 0]
 gammas_blue = [1, 1, 0]
-
-ks = np.array([
-    [1, 1, 0],  # ll lf lu
-    [1, 1, 1],  # fl ff fu
-    [0, 0, 1]   # ul uf uu
-])
-
 # tau_blue_l = 0
 # tau_red_f = 0
 tau_blue_l = 0.1
 tau_red_f = 0.01
 
+ks = np.array([
+    [1, 1, 1],  # ll lf lu
+    [1, 1, 1],  # fl ff fu
+    [1, 1, 1]   # ul uf uu
+])
+
+# ks = np.array([
+#     [1, 1, 0],  # ll lf lu
+#     [1, 1, 1],  # fl ff fu
+#     [0, 0, 1]   # ul uf uu
+# ])
+
 c_att, l_att = 50, 1
 c_rep, l_rep = 60, 0.5
+
 nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
+ode = lambda x_step, v_step, w_step: ode_system(x_step, v_step, w_step, n_l, n_f, n_u, 
+               alpha, beta, nabla_u, r_x, r_w, gammas_blue, gammas_red, tau_blue_l, tau_red_f, ks)
 
 
+
+# --------------------------------------------------
 # INTEGRATION STEP
+# --------------------------------------------------
 
 # np.random.seed(4321)
 # np.random.seed(2468)
 np.random.seed(1234)
 
-# [VVM] why is this the domain
 x[0] = np.random.uniform(-1, 1, (n, 2))
 v[0] = np.random.uniform(-1, 1, (n, 2))
 w[0] = np.hstack([
@@ -155,7 +172,7 @@ w[0] = np.hstack([
 
 # Preparation: compute the first solution using Euler. Use it to compute the second system.
 
-dx_0, dv_0, dw_0 = ode_system(x[0], v[0], w[0], n_l, n_f, n_u, alpha, beta, nabla_u, r_x, r_w, gammas_blue, gammas_red, tau_blue_l, tau_red_f, ks)
+dx_0, dv_0, dw_0 = ode(x[0], v[0], w[0])
 x[1] = x[0] + dt*dx_0
 v[1] = v[0] + dt*dv_0
 w[1] = w[0] + dt*dw_0
@@ -163,7 +180,7 @@ w[1] = w[0] + dt*dw_0
 # Adams-Bashforth 2-step method
 
 for i in range(1, steps-1):
-    dx_1, dv_1, dw_1 = ode_system(x[i], v[i], w[i], n_l, n_f, n_u, alpha, beta, nabla_u, r_x, r_w, gammas_blue, gammas_red, tau_blue_l, tau_red_f, ks)
+    dx_1, dv_1, dw_1 = ode(x[i], v[i], w[i])
     
     x[i+1] = x[i] + (dt / 2) * (3 * dx_1 - dx_0)
     v[i+1] = v[i] + (dt / 2) * (3 * dv_1 - dv_0)
@@ -172,10 +189,61 @@ for i in range(1, steps-1):
     dx_0, dv_0, dw_0 = dx_1, dv_1, dw_1
 
 
+
 # --------------------------------------------------
+# DATA
 # --------------------------------------------------
-output_folder = 'figures/full-swarming'
+
+output_folder = 'figures/temp-swarming'
 os.makedirs(output_folder, exist_ok=True)
+
+# # Final velocity
+
+# v_final = v[-1, :]
+# output_file = os.path.join(output_folder, 'final_velocities.txt')
+# np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
+
+# # Mean of initial conditions
+
+# x_mean = np.mean(x[0], axis=0)
+# v_mean = np.mean(v[0], axis=0)
+# w_mean = np.mean(w[0])
+# output_file = os.path.join(output_folder, 'initial_means.txt')
+# with open(output_file, 'w') as f:
+#     f.write('Initial conditions means\n')
+#     f.write('-------------------------\n')
+#     f.write(f"Mean position (x): {x_mean[0]:.4f}, {x_mean[1]:.4f}\n")
+#     f.write(f"Mean velocity (v): {v_mean[0]:.4f}, {v_mean[1]:.4f}\n")
+#     f.write(f"Mean opinion (w): {w_mean:.4f}\n")
+
+
+
+# --------------------------------------------------
+# PLOTS
+# --------------------------------------------------
+
+# RECORD: movie
+
+fig, ax = plt.subplots()
+
+def update(i):
+    ax.clear()
+
+    ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
+    ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
+    ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
+
+    ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
+    ax.set_xlabel('x', fontsize=14)
+    ax.set_ylabel('y', fontsize=14)
+    ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
+    ax.axis('equal')
+    ax.grid(False)
+
+frame_indices = range(0, steps, 5)
+ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
+output_file = os.path.join(output_folder, 'swarm_movie.mp4')
+ani.save(output_file, writer='ffmpeg', fps=10)
 
 
 # PLOT: final velocity configuration

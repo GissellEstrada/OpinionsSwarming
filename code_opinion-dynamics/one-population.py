@@ -4,6 +4,10 @@ import os
 
 
 
+# --------------------------------------------------
+# FUNCTIONS
+# --------------------------------------------------
+
 def nabla_morse_potential(r, c_rep, c_att, l_rep, l_att):
     return -(c_rep/l_rep) * np.exp(-r/l_rep) + (c_att/l_att) * np.exp(-r/l_att)
 
@@ -70,57 +74,10 @@ def opinion_alignment_sum(x_step, w_step, n, r_x, r_w):
     return phi_sum
 
 
-# parameter_combinations = {
-#     '1': {
-#         'r_x': 0.5,
-#         'r_w': 1,
-#         'alpha': 1,
-#         'beta': 5,
-#         'tau_blue': 0.1,
-#         'tau_red': 0.1,
-#         'c_att': 100,
-#         'l_att': 1.2,
-#         'c_rep': 350,
-#         'l_rep': 0.8
-#     },
-#     '2': {
-#         'r_x': 0.5,
-#         'r_w': 1,
-#         'alpha': 1,
-#         'beta': 5,
-#         'tau_blue': 0.1,
-#         'tau_red': 0.1,
-#         'c_att': 100,
-#         'l_att': 1.2,
-#         'c_rep': 350,
-#         'l_rep': 0.8
-#     },
-# }
-
-# choice = input("Choose an option: 1, 2, 3, 4 or 5): ")
-
-# if choice in parameter_combinations:
-#     params = parameter_combinations[choice]
-
-#     r_x = params['r_x']
-#     r_w = params['r_w']
-#     alpha = params['alpha']
-#     beta = params['beta']
-#     tau_blue = params['tau_blue']
-#     tau_red = params['tau_red']
-#     c_att = params['c_att']
-#     l_att = params['l_att']
-#     c_rep = params['c_rep']
-#     l_rep = params['l_rep']
-    
-#     print(f"You selected option {choice}")
-# else:
-#     print("Invalid option. Exiting.")
-
 
 # --------------------------------------------------
+# PARAMETERS
 # --------------------------------------------------
-# PROBLEM DATA
 
 t_final = 100
 dt = 1.0e-2
@@ -155,9 +112,13 @@ tau_blue = 0
 tau_red = 0
 
 nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
+ode = lambda x_step, v_step, w_step: ode_system (x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
 
 
+
+# --------------------------------------------------
 # INTEGRATION STEP
+# --------------------------------------------------
 
 np.random.seed(1234)
 
@@ -167,7 +128,7 @@ w[0] = -1 + 2*np.random.rand(n)
 
 # Preparation: compute the first solution using Euler. Use it to compute the second system.
 
-dx_0, dv_0, dw_0 = ode_system(x[0], v[0], w[0], n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
+dx_0, dv_0, dw_0 = ode(x[0], v[0], w[0])
 x[1] = x[0] + dt*dx_0
 v[1] = v[0] + dt*dv_0
 w[1] = w[0] + dt*dw_0
@@ -175,7 +136,7 @@ w[1] = w[0] + dt*dw_0
 # Adams-Bashforth 2-step method
 
 for i in range(1, steps-1):
-    dx_1, dv_1, dw_1 = ode_system(x[i], v[i], w[i], n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
+    dx_1, dv_1, dw_1 = ode(x[i], v[i], w[i])
 
     x[i+1] = x[i] + (dt/2) * (3*dx_1 - dx_0)
     v[i+1] = v[i] + (dt/2) * (3*dv_1 - dv_0)
@@ -187,8 +148,11 @@ for i in range(1, steps-1):
         raise ValueError(f'NaN or Inf encountered at time step {i}')
 
 
+
 # --------------------------------------------------
+# PLOTS
 # --------------------------------------------------
+
 output_folder = 'figures/one-population'
 os.makedirs(output_folder, exist_ok=True)
 
