@@ -157,59 +157,60 @@ output_folder = 'figures/one-population'
 os.makedirs(output_folder, exist_ok=True)
 
 
-# PLOT: final velocity configuration
+# # PLOT: final velocity configuration
 
-plt.figure()
-plt.scatter(x[-1, :, 0], x[-1, :, 1], color='b', label='Positions')
-plt.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r', label='Velocities')
-plt.xlabel('x', fontsize=14)
-plt.ylabel('y', fontsize=14)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.grid(False)
-plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
-plt.axis('equal')
-plt.legend()
+# plt.figure()
+# plt.scatter(x[-1, :, 0], x[-1, :, 1], color='b', label='Positions')
+# plt.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r', label='Velocities')
+# plt.xlabel('x', fontsize=14)
+# plt.ylabel('y', fontsize=14)
+# plt.xticks(fontsize=12)
+# plt.yticks(fontsize=12)
+# plt.grid(False)
+# plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
+# plt.axis('equal')
+# plt.legend()
 
-output_file = os.path.join(output_folder, 'velocities.svg')
-plt.savefig(output_file)
-# plt.show()
+# output_file = os.path.join(output_folder, 'velocities.svg')
+# plt.savefig(output_file)
+# # plt.show()
 
 
 # PLOT: opinion over time
 
 plt.figure()
-plt.plot(range(steps), w, 'k')
-plt.xlabel('steps', fontsize=14)
-plt.ylabel('Opinion', fontsize=14)
+plt.plot(range(steps), w, 'k', alpha=0.2)
+plt.xlabel('timestep', fontsize=14)
+plt.ylabel('opinion', fontsize=14)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
-plt.title('Opinion Over Time', fontsize=16, fontweight='bold')
+plt.title('Opinion of each individual', fontsize=16, fontweight='bold')
 plt.grid(False)
 
-output_file = os.path.join(output_folder, 'opinion.svg')
+output_file = os.path.join(output_folder, 'case-viii-a_opinion.svg')
 plt.savefig(output_file)
 # plt.show()
 
 
-# # PLOT: velocities over time
 
-# time_indices = np.arange(0, steps, 1000)
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# for t in time_indices:
-#     ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
-#     ax.quiver(x[t, :, 0], x[t, :, 1], t, v[t, :, 0], v[t, :, 1], 0, color='r', length=6, linewidth=1)
-#     ax.set_xlabel('X')
-# ax.set_ylabel('Y')
-# ax.set_zlabel('steps')
-# ax.set_title('Velocities Over Time')
-# plt.grid(True)
+# PLOT: velocities over time
 
-# output_file = os.path.join(output_folder, 'velocities_over_time.svg')
-# plt.savefig(output_file)
+time_indices = np.arange(0, steps, 1000)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+for t in time_indices:
+    ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
+    ax.quiver(x[t, :, 0], x[t, :, 1], t, v[t, :, 0], v[t, :, 1], 0, color='r', length=6, linewidth=1)
+    ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('steps')
+ax.set_title('Velocities Over Time')
+plt.grid(True)
 
-# # plt.show()
+output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+plt.savefig(output_file)
+
+# plt.show()
 
 
 # # PLOT: positions over time

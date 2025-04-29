@@ -197,11 +197,11 @@ for i in range(1, steps-1):
 output_folder = 'figures/temp-swarming'
 os.makedirs(output_folder, exist_ok=True)
 
-# # Final velocity
+# Final velocity
 
-# v_final = v[-1, :]
-# output_file = os.path.join(output_folder, 'final_velocities.txt')
-# np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
+v_final = v[-1, :]
+output_file = os.path.join(output_folder, 'final_velocities.txt')
+np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
 
 # # Mean of initial conditions
 
@@ -222,28 +222,28 @@ os.makedirs(output_folder, exist_ok=True)
 # PLOTS
 # --------------------------------------------------
 
-# RECORD: movie
+# # RECORD: movie
 
-fig, ax = plt.subplots()
+# fig, ax = plt.subplots()
 
-def update(i):
-    ax.clear()
+# def update(i):
+#     ax.clear()
 
-    ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
-    ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
-    ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
+#     ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
+#     ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
+#     ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
 
-    ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
-    ax.set_xlabel('x', fontsize=14)
-    ax.set_ylabel('y', fontsize=14)
-    ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
-    ax.axis('equal')
-    ax.grid(False)
+#     ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
+#     ax.set_xlabel('x', fontsize=14)
+#     ax.set_ylabel('y', fontsize=14)
+#     ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
+#     ax.axis('equal')
+#     ax.grid(False)
 
-frame_indices = range(0, steps, 5)
-ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
-output_file = os.path.join(output_folder, 'swarm_movie.mp4')
-ani.save(output_file, writer='ffmpeg', fps=10)
+# frame_indices = range(0, steps, 5)
+# ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
+# output_file = os.path.join(output_folder, 'swarm_movie.mp4')
+# ani.save(output_file, writer='ffmpeg', fps=10)
 
 
 # PLOT: final velocity configuration
