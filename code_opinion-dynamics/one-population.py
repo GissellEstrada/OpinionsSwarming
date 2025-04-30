@@ -108,8 +108,8 @@ l_rep = 0.8
 r_x = 0.5
 r_w = 1
 
-tau_blue = 0
-tau_red = 0
+tau_blue = 0.1
+tau_red = 0.01
 
 nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
 ode = lambda x_step, v_step, w_step: ode_system (x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
@@ -120,7 +120,7 @@ ode = lambda x_step, v_step, w_step: ode_system (x_step, v_step, w_step, n, alph
 # INTEGRATION STEP
 # --------------------------------------------------
 
-np.random.seed(1234)
+np.random.seed(534)
 
 x[0] = -1 + 2*np.random.rand(n, 2)
 v[0] = -1 + 2*np.random.rand(n, 2)
@@ -187,28 +187,28 @@ plt.yticks(fontsize=12)
 plt.title('Opinion of each individual', fontsize=16, fontweight='bold')
 plt.grid(False)
 
-output_file = os.path.join(output_folder, 'case-viii-a_opinion.svg')
+output_file = os.path.join(output_folder, 'opinion.svg')
 plt.savefig(output_file)
 # plt.show()
 
 
 
-# PLOT: velocities over time
+# # PLOT: velocities over time
 
-time_indices = np.arange(0, steps, 1000)
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for t in time_indices:
-    ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
-    ax.quiver(x[t, :, 0], x[t, :, 1], t, v[t, :, 0], v[t, :, 1], 0, color='r', length=6, linewidth=1)
-    ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('steps')
-ax.set_title('Velocities Over Time')
-plt.grid(True)
+# time_indices = np.arange(0, steps, 1000)
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# for t in time_indices:
+#     ax.scatter(x[t, :, 0], x[t, :, 1], t, color='b', marker='o')
+#     ax.quiver(x[t, :, 0], x[t, :, 1], t, v[t, :, 0], v[t, :, 1], 0, color='r', length=6, linewidth=1)
+#     ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('steps')
+# ax.set_title('Velocities Over Time')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'velocities_over_time.svg')
-plt.savefig(output_file)
+# output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+# plt.savefig(output_file)
 
 # plt.show()
 

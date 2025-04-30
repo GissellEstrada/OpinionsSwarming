@@ -153,17 +153,21 @@ def simulate():
 # SIMULATION and AVERAGING
 # -----------------------------
 
-runs = 2
+runs = 5
 
 all_w = np.zeros((runs, steps, n))
+all_v_means = np.zeros((runs, steps, 2))
 ensemble_avg_opinion = np.zeros(steps)
 
 np.random.seed(1234)
 for run in range(runs):
     x, v, w = simulate()
+
+    all_v_means[run] = np.mean(v, axis=1)
     all_w[run] = w
     ensemble_avg_opinion += np.mean(w, axis=1)
 
+v_means = all_v_means.transpose(1, 0, 2)
 ensemble_avg_opinion /= runs
 
 
@@ -188,7 +192,7 @@ ax.set_ylim(-1, 1)
 
 # ax.set_xscale('log')
 plt.tight_layout()
-output_file = os.path.join(output_folder, f"avg-case-ii_b.svg")
+output_file = os.path.join(output_folder, f"avg.svg")
 plt.savefig(output_file)
 
 
@@ -198,7 +202,7 @@ plt.figure()
 fig, ax = plt.subplots(figsize=(5,4))
 for run in range(runs):
     ax.plot(range(1, steps+1), all_w[run], 'k', alpha=0.1)
-ax.set_title("Mean opinion", fontweight="bold", fontsize=16)
+ax.set_title("All opinions", fontweight="bold", fontsize=16)
 ax.set_xlabel("timestep", fontsize=14)
 ax.set_ylabel("opinion", fontsize=14)
 ax.set_xlim(1, steps)
@@ -206,22 +210,42 @@ ax.set_ylim(-1, 1)
 
 # ax.set_xscale('log')
 plt.tight_layout()
-output_file = os.path.join(output_folder, f"all-case-ii_b.svg")
+output_file = os.path.join(output_folder, f"all.svg")
 plt.savefig(output_file)
 
 
 # PLOT: mean velocities over time
 
-time_indices = np.arange(0, steps, 1000)
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for t in time_indices:
-    ax.scatter(v[t, :, 0], v[t, :, 1], t, color='b', marker='o')
-    ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('steps')
-ax.set_title('Mean velocities over time')
-plt.grid(True)
+# time_indices = np.arange(0, steps, 1000)
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# for t in time_indices:
+#     ax.scatter(v[t, :, 0], v[t, :, 1], t, color='b', marker='o')
+#     ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('steps')
+# ax.set_title('Mean velocities over time')
+# plt.grid(True)
 
-output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+# output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+# plt.savefig(output_file)
+
+timesteps_to_plot = np.arange(0, steps, 100)
+v_means_subsampled = v_means[timesteps_to_plot]
+
+x = v_means_subsampled[..., 0].flatten()
+y = v_means_subsampled[..., 1].flatten()
+z = np.repeat(timesteps_to_plot, v_means_subsampled.shape[1])
+
+fig = plt.figure(figsize=(10, 6))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(x, y, z, c=z, cmap='viridis', marker='o', alpha=0.6)
+
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('timestep')
+plt.title('Mean velocities')
+output_file = os.path.join(output_folder, f"velocities.svg")
 plt.savefig(output_file)
+
+# plt.show()

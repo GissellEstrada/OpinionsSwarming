@@ -110,7 +110,7 @@ def opinion_alignment_sum(x1, x2, w1, w2, r_x, r_w):
 n_l = 20
 n_f = 50
 # n_u = 50
-n_u = 0
+n_u = 10
 n = n_l + n_f + n_u
 
 t_final = 100
@@ -135,16 +135,10 @@ tau_blue_l = 0.1
 tau_red_f = 0.01
 
 ks = np.array([
-    [1, 1, 1],  # ll lf lu
-    [1, 1, 1],  # fl ff fu
-    [1, 1, 1]   # ul uf uu
+    [1, 1, 0],  # ll lf lu
+    [1, 1, 0],  # fl ff fu
+    [0, 0, 0]   # ul uf uu
 ])
-
-# ks = np.array([
-#     [1, 1, 0],  # ll lf lu
-#     [1, 1, 1],  # fl ff fu
-#     [0, 0, 1]   # ul uf uu
-# ])
 
 c_att, l_att = 50, 1
 c_rep, l_rep = 60, 0.5
@@ -191,6 +185,28 @@ for i in range(1, steps-1):
 
 
 # --------------------------------------------------
+# ANALYSIS
+# --------------------------------------------------
+
+sum_velocities = np.sum(v, axis=1)
+pol_numerator = np.linalg.norm(sum_velocities, axis=1)
+norms_velocities = np.linalg.norm(v, axis=2)
+pol_denominator = np.sum(norms_velocities, axis=1)
+
+pol = pol_numerator / pol_denominator
+
+x_cm = np.mean(x, axis=1, keepdims=True)  
+r = x - x_cm
+cross = r[..., 0] * v[..., 1] - r[..., 1] * v[..., 0]
+mom_numerator = np.abs(np.sum(cross, axis=1)) 
+norms_r = np.linalg.norm(r, axis=2)
+mom_denominator = np.sum(norms_r * norms_velocities, axis=1) 
+
+momentum = mom_numerator / mom_denominator 
+
+
+
+# --------------------------------------------------
 # DATA
 # --------------------------------------------------
 
@@ -224,26 +240,26 @@ np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
 
 # # RECORD: movie
 
-# fig, ax = plt.subplots()
+fig, ax = plt.subplots()
 
-# def update(i):
-#     ax.clear()
+def update(i):
+    ax.clear()
 
-#     ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
-#     ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
-#     ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
+    ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
+    ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
+    ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
 
-#     ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
-#     ax.set_xlabel('x', fontsize=14)
-#     ax.set_ylabel('y', fontsize=14)
-#     ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
-#     ax.axis('equal')
-#     ax.grid(False)
+    ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
+    ax.set_xlabel('x', fontsize=14)
+    ax.set_ylabel('y', fontsize=14)
+    ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
+    ax.axis('equal')
+    ax.grid(False)
 
-# frame_indices = range(0, steps, 5)
-# ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
-# output_file = os.path.join(output_folder, 'swarm_movie.mp4')
-# ani.save(output_file, writer='ffmpeg', fps=10)
+frame_indices = range(0, steps, 5)
+ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
+output_file = os.path.join(output_folder, 'swarm_movie.mp4')
+ani.save(output_file, writer='ffmpeg', fps=10)
 
 
 # PLOT: final velocity configuration
@@ -270,20 +286,41 @@ plt.savefig(output_file)
 # PLOT: opinion over time
 
 plt.figure()
-plt.plot(range(steps), w[:, :n_l], 'b', linewidth=1.5)
-plt.plot(range(steps), w[:, n_l:n_l+n_f], 'r', linewidth=1.5)
-plt.plot(range(steps), w[:, n_l+n_f:], 'k', linewidth=1.5)
-plt.xlabel('Step', fontsize=14)
-plt.ylabel('Opinion', fontsize=14)
+plt.plot(range(steps), w[:, :n_l], 'b', linewidth=1.5, alpha=0.2)
+plt.plot(range(steps), w[:, n_l:n_l+n_f], 'r', linewidth=1.5, alpha=0.2)
+plt.plot(range(steps), w[:, n_l+n_f:], 'k', linewidth=1.5, alpha=0.2)
+plt.xlabel('timestep', fontsize=14)
+plt.ylabel('opinion', fontsize=14)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
-plt.title('Opinion Over Time', fontsize=16, fontweight='bold')
+plt.title('Opinion over time', fontsize=16, fontweight='bold')
 plt.grid(False)
 
 output_file = os.path.join(output_folder, 'opinion.svg')
 plt.savefig(output_file)
 
-# plt.show()
+
+# PLOT: quantities over time
+
+plt.figure()
+plt.plot(range(steps), pol, 'k', linewidth=1.5, label="Polarisation")
+plt.plot(range(steps), momentum, 'r', linewidth=1.5, label="Momentum")
+plt.xlabel('timestep', fontsize=14)
+plt.ylabel('quantity', fontsize=14)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.title('Quantities over time', fontsize=16, fontweight='bold')
+plt.legend()
+plt.grid(False)
+
+output_file = os.path.join(output_folder, 'quantities.svg')
+plt.savefig(output_file)
+
+
+
+
+
+
 
 
 # # PLOT: velocities over time
