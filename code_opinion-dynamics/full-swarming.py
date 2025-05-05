@@ -109,8 +109,8 @@ def opinion_alignment_sum(x1, x2, w1, w2, r_x, r_w):
 
 n_l = 20
 n_f = 50
-# n_u = 50
-n_u = 10
+n_u = 0
+
 n = n_l + n_f + n_u
 
 t_final = 100
@@ -120,7 +120,6 @@ steps = int(np.floor(t_final / dt))
 x = np.zeros((steps, n, 2))
 v = np.zeros((steps, n, 2))
 w = np.zeros((steps, n))
-if n_u == 0: n_u = 1
 
 r_x = 1
 r_w = 0.5
@@ -129,14 +128,13 @@ beta = 0.5
 
 gammas_red = [1, 1, 0]
 gammas_blue = [1, 1, 0]
-# tau_blue_l = 0
-# tau_red_f = 0
-tau_blue_l = 0.1
-tau_red_f = 0.01
+
+tau_blue_l = 0
+tau_red_f = 0
 
 ks = np.array([
     [1, 1, 0],  # ll lf lu
-    [1, 1, 0],  # fl ff fu
+    [1, 1, 1],  # fl ff fu, fu=1 in case 4, and 0 in the rest
     [0, 0, 0]   # ul uf uu
 ])
 
@@ -153,16 +151,17 @@ ode = lambda x_step, v_step, w_step: ode_system(x_step, v_step, w_step, n_l, n_f
 # INTEGRATION STEP
 # --------------------------------------------------
 
-# np.random.seed(4321)
-# np.random.seed(2468)
-np.random.seed(1234)
+# np.random.seed(4321)      # for case 1b, 4b
+# np.random.seed(2468)      # for case 4c
+np.random.seed(1234)      # for the rest
 
 x[0] = np.random.uniform(-1, 1, (n, 2))
 v[0] = np.random.uniform(-1, 1, (n, 2))
 w[0] = np.hstack([
-    np.random.uniform(-1, 1, (n-n_u,)), 
+    np.random.uniform(-1, 1, (n_f+n_l,)), 
     np.zeros((n_u,))    # uninformed opinions start at zero
 ])
+if n_u == 0: n_u = 1
 
 # Preparation: compute the first solution using Euler. Use it to compute the second system.
 
@@ -210,14 +209,14 @@ momentum = mom_numerator / mom_denominator
 # DATA
 # --------------------------------------------------
 
-output_folder = 'figures/temp-swarming'
+output_folder = 'figures/full-swarming'
 os.makedirs(output_folder, exist_ok=True)
 
-# Final velocity
+# # Final velocity
 
-v_final = v[-1, :]
-output_file = os.path.join(output_folder, 'final_velocities.txt')
-np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
+# v_final = v[-1, :]
+# output_file = os.path.join(output_folder, 'final_velocities.txt')
+# np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
 
 # # Mean of initial conditions
 
@@ -240,26 +239,26 @@ np.savetxt(output_file, v_final, fmt='%.6f', header='vx vy')
 
 # # RECORD: movie
 
-fig, ax = plt.subplots()
+# fig, ax = plt.subplots()
 
-def update(i):
-    ax.clear()
+# def update(i):
+#     ax.clear()
 
-    ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
-    ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
-    ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
+#     ax.plot(x[i, :n_l, 0], x[i, :n_l, 1], 'o', c='b')
+#     ax.plot(x[i, n_l:n_l+n_f, 0], x[i, n_l:n_l+n_f, 1], 'o', c='r')
+#     ax.plot(x[i, n_l+n_f:n, 0], x[i, n_l+n_f:n, 1], 'o', c='k')
 
-    ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
-    ax.set_xlabel('x', fontsize=14)
-    ax.set_ylabel('y', fontsize=14)
-    ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
-    ax.axis('equal')
-    ax.grid(False)
+#     ax.quiver(x[i, :, 0], x[i, :, 1], v[i, :, 0], v[i, :, 1], color='k')
+#     ax.set_xlabel('x', fontsize=14)
+#     ax.set_ylabel('y', fontsize=14)
+#     ax.set_title(f'Velocities at time step {i}', fontsize=16, fontweight='bold')
+#     ax.axis('equal')
+#     ax.grid(False)
 
-frame_indices = range(0, steps, 5)
-ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
-output_file = os.path.join(output_folder, 'swarm_movie.mp4')
-ani.save(output_file, writer='ffmpeg', fps=10)
+# frame_indices = range(0, steps, 5)
+# ani = animation.FuncAnimation(fig, update, frames=frame_indices, interval=100)
+# output_file = os.path.join(output_folder, 'swarm_movie.mp4')
+# ani.save(output_file, writer='ffmpeg', fps=10)
 
 
 # PLOT: final velocity configuration
@@ -277,7 +276,10 @@ plt.grid(False)
 plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
 plt.axis('equal')
 
-output_file = os.path.join(output_folder, 'velocity.svg')
+# xmin, xmax = plt.xlim()
+# plt.xlim(xmin, xmax + (xmax - xmin) * 0.2)
+
+output_file = os.path.join(output_folder, 'case-1a_velocity.svg')
 plt.savefig(output_file)
 
 # plt.show()
@@ -296,7 +298,7 @@ plt.yticks(fontsize=12)
 plt.title('Opinion over time', fontsize=16, fontweight='bold')
 plt.grid(False)
 
-output_file = os.path.join(output_folder, 'opinion.svg')
+output_file = os.path.join(output_folder, 'case-1a_opinion.svg')
 plt.savefig(output_file)
 
 
@@ -313,8 +315,98 @@ plt.title('Quantities over time', fontsize=16, fontweight='bold')
 plt.legend()
 plt.grid(False)
 
-output_file = os.path.join(output_folder, 'quantities.svg')
+output_file = os.path.join(output_folder, 'case-1a_quantities.svg')
 plt.savefig(output_file)
+
+
+# PLOT: mean velocity components over time
+
+mean_vx_time = np.mean(v[:, :, 0], axis=1)
+mean_vy_time = np.mean(v[:, :, 1], axis=1)
+time = np.arange(v.shape[0])
+
+fig, (ax1, ax2) = plt.subplots(
+    nrows=2, ncols=1,
+    figsize=(6, 5),
+    sharex=True,
+    constrained_layout=True
+)
+
+ax1.plot(time, mean_vx_time, 'b-', linewidth=2)
+ax1.set_xlabel('timestep')
+ax1.set_ylabel('v_x')
+ax1.set_title('Mean velocity component v_x over time', fontweight='bold')
+ax1.grid(True)
+
+ax2.plot(time, mean_vy_time, 'r-', linewidth=2)
+ax2.set_xlabel('timestep')
+ax2.set_ylabel('v_y')
+ax2.set_title('Mean velocity component v_y over time', fontweight='bold')
+ax2.grid(True)
+
+output_file = os.path.join(output_folder, 'case-1a_mean-velocity.svg')
+fig.savefig(output_file)
+
+
+# PLOT: all in one figure
+
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+fig, ax_main = plt.subplots(figsize=(8,6))
+
+ax_main.plot(x[-1, :n_l,   0], x[-1, :n_l,   1], 'o', c='b')
+ax_main.plot(x[-1, n_l:n_l+n_f,   0], x[-1, n_l:n_l+n_f,   1], 'o', c='r')
+ax_main.plot(x[-1, n_l+n_f:n, 0], x[-1, n_l+n_f:n, 1], 'o', c='k')
+ax_main.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='k')
+
+ax_main.set_xlabel('x', fontsize=16)
+ax_main.set_ylabel('y', fontsize=16)
+ax_main.tick_params(labelsize=13)
+ax_main.grid(False)
+ax_main.set_title('Velocities at the final time', fontsize=18, fontweight='bold')
+ax_main.axis('equal')
+
+xmin, xmax = ax_main.get_xlim()
+ax_main.set_xlim(xmin, xmax + (xmax-xmin)*0.3)
+
+# mean velocities
+ax_ins_vx = inset_axes(
+    ax_main,
+    width="100%", height="100%",
+    bbox_to_anchor=(0.67    , 0.00, 0.3, 0.15),
+    bbox_transform=ax_main.transAxes,
+    loc='lower left'
+)
+ax_ins_vx.plot(time, mean_vx_time, 'b-', linewidth=1)
+ax_ins_vx.set_xticks([])
+ax_ins_vx.set_yticks([])
+ax_ins_vy = inset_axes(
+    ax_main,
+    width="100%", height="100%",
+    bbox_to_anchor=(0.67    , 0.15, 0.3, 0.15),
+    bbox_transform=ax_main.transAxes,
+    loc='lower left'
+)
+ax_ins_vy.plot(time, mean_vy_time, 'r-', linewidth=1)
+ax_ins_vy.set_xticks([])
+ax_ins_vy.set_yticks([])
+
+#  opinions
+ax_ins_opinion = inset_axes(
+    ax_main,
+    width="100%", height="100%",
+    bbox_to_anchor=(0.67    , 0.66, 0.3, 0.3),
+    bbox_transform=ax_main.transAxes,
+    loc='lower left'
+)
+plt.plot(range(steps), w[:, :n_l], 'b', linewidth=1.5, alpha=0.2)
+plt.plot(range(steps), w[:, n_l:n_l+n_f], 'r', linewidth=1.5, alpha=0.2)
+plt.plot(range(steps), w[:, n_l+n_f:], 'k', linewidth=1.5, alpha=0.2)
+ax_ins_opinion.set_xticks([])
+ax_ins_opinion.set_yticks([])
+
+plt.savefig(os.path.join(output_folder, 'case-1a.svg'))
+
 
 
 
@@ -359,34 +451,6 @@ plt.savefig(output_file)
 # plt.grid(True)
 
 # output_file = os.path.join(output_folder, 'positions_over_time.svg')
-# plt.savefig(output_file)
-
-# plt.show()
-
-
-# # PLOT: mean velocities over time
-
-# mean_vx_time = np.mean(v[:, :, 0], axis=1)
-# mean_vy_time = np.mean(v[:, :, 1], axis=1)
-# time = np.arange(v.shape[0])
-
-# plt.figure()
-
-# plt.subplot(2, 1, 1)
-# plt.plot(time, mean_vx_time, 'b-', linewidth=2)
-# plt.xlabel('Steps')
-# plt.ylabel('Mean V_x')
-# plt.title('Mean Velocity Component V_x Over Time')
-# plt.grid(True)
-
-# plt.subplot(2, 1, 2)
-# plt.plot(time, mean_vy_time, 'r-', linewidth=2)
-# plt.xlabel('Steps')
-# plt.ylabel('Mean V_y')
-# plt.title('Mean Velocity Component V_y Over Time')
-# plt.grid(True)
-
-# output_file = os.path.join(output_folder, 'mean_velocities.svg')
 # plt.savefig(output_file)
 
 # plt.show()

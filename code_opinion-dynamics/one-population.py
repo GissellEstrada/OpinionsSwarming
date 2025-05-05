@@ -108,8 +108,8 @@ l_rep = 0.8
 r_x = 0.5
 r_w = 1
 
-tau_blue = 0.1
-tau_red = 0.01
+tau_blue = 0
+tau_red = 0
 
 nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
 ode = lambda x_step, v_step, w_step: ode_system (x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
@@ -120,7 +120,7 @@ ode = lambda x_step, v_step, w_step: ode_system (x_step, v_step, w_step, n, alph
 # INTEGRATION STEP
 # --------------------------------------------------
 
-np.random.seed(534)
+np.random.seed(1234)
 
 x[0] = -1 + 2*np.random.rand(n, 2)
 v[0] = -1 + 2*np.random.rand(n, 2)
@@ -157,23 +157,22 @@ output_folder = 'figures/one-population'
 os.makedirs(output_folder, exist_ok=True)
 
 
-# # PLOT: final velocity configuration
+# PLOT: final velocity configuration
 
-# plt.figure()
-# plt.scatter(x[-1, :, 0], x[-1, :, 1], color='b', label='Positions')
-# plt.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r', label='Velocities')
-# plt.xlabel('x', fontsize=14)
-# plt.ylabel('y', fontsize=14)
-# plt.xticks(fontsize=12)
-# plt.yticks(fontsize=12)
-# plt.grid(False)
-# plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
-# plt.axis('equal')
-# plt.legend()
+plt.figure()
+plt.scatter(x[-1, :, 0], x[-1, :, 1], color='b', label='Positions')
+plt.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r', label='Velocities')
+plt.xlabel('x', fontsize=14)
+plt.ylabel('y', fontsize=14)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.grid(False)
+plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
+plt.axis('equal')
+plt.legend()
 
-# output_file = os.path.join(output_folder, 'velocities.svg')
-# plt.savefig(output_file)
-# # plt.show()
+output_file = os.path.join(output_folder, 'case-viii-a_velocity.svg')
+plt.savefig(output_file)
 
 
 # PLOT: opinion over time
@@ -187,9 +186,36 @@ plt.yticks(fontsize=12)
 plt.title('Opinion of each individual', fontsize=16, fontweight='bold')
 plt.grid(False)
 
-output_file = os.path.join(output_folder, 'opinion.svg')
+output_file = os.path.join(output_folder, 'case-viii-a_opinion.svg')
 plt.savefig(output_file)
-# plt.show()
+
+
+# PLOT: final velocity configuration with inset of opinion over time
+
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+fig, ax = plt.subplots(figsize=(8,6))
+
+ax.scatter(x[-1, :, 0], x[-1, :, 1], color='b', label='Positions')
+ax.quiver(x[-1, :, 0], x[-1, :, 1], v[-1, :, 0], v[-1, :, 1], color='r', label='Velocities')
+ax.set_xlabel('x', fontsize=14)
+ax.set_ylabel('y', fontsize=14)
+ax.tick_params(axis='both', labelsize=12)
+ax.grid(False)
+ax.set_title('Velocities at the final time', fontsize=16, fontweight='bold')
+ax.axis('equal')
+
+xmin, xmax = ax.get_xlim()
+ax.set_xlim(xmin, xmax + (xmax-xmin)*0.3)
+
+ax_ins = inset_axes(ax, width="30%", height="30%", loc=4, borderpad=1)
+ax_ins.plot(range(steps), w, 'k', alpha=0.2)
+ax_ins.set_xticks([])
+ax_ins.set_yticks([])
+
+output_file = os.path.join(output_folder, 'case-viii-a.svg')
+fig.savefig(output_file)
+
 
 
 

@@ -103,7 +103,6 @@ def opinion_alignment_sum(x1, x2, w1, w2, r_x, r_w):
 
 n_l = 20
 n_f = 50
-# n_u = 50
 n_u = 20
 n = n_l + n_f + n_u
 
@@ -126,7 +125,7 @@ tau_red_f = 0.01
 ks = np.array([
     [1, 1, 0],  # ll lf lu
     [1, 1, 1],  # fl ff fu
-    [0, 0, 1]   # ul uf uu
+    [0, 0, 0]   # ul uf uu
 ])
 
 c_att, l_att = 50, 1
@@ -183,12 +182,12 @@ def simulate():
 # SIMULATION and AVERAGING
 # -----------------------------
 
-runs = 15
+runs = 50
 
 all_w = np.zeros((runs, steps, n))
 all_v_means = np.zeros((runs, steps, 2))
 ensemble_avg_opinion = np.zeros(steps)
-pol = np.zeros((runs, steps))
+polarisation = np.zeros((runs, steps))
 momentum = np.zeros((runs, steps))
 
 np.random.seed(1234)
@@ -201,10 +200,10 @@ for run in range(runs):
     ensemble_avg_opinion += np.mean(w, axis=1)
 
     sum_velocities = np.sum(v, axis=1)
-    pol_numerator = np.linalg.norm(sum_velocities, axis=1)
+    polarisation_numerator = np.linalg.norm(sum_velocities, axis=1)
     norms_velocities = np.linalg.norm(v, axis=2)
-    pol_denominator = np.sum(norms_velocities, axis=1)
-    pol[run] = pol_numerator / pol_denominator
+    polarisation_denominator = np.sum(norms_velocities, axis=1)
+    polarisation[run] = polarisation_numerator / polarisation_denominator
 
     x_cm = np.mean(x, axis=1, keepdims=True)  
     r = x - x_cm
@@ -215,8 +214,10 @@ for run in range(runs):
 
     momentum[run] = mom_numerator / mom_denominator 
 
-v_means = all_v_means.transpose(1, 0, 2)
 ensemble_avg_opinion /= runs
+ensemble_velocity   = np.mean(all_v_means, axis=0)
+momentum_mean = np.mean(momentum, axis=0)
+polarisation_mean = np.mean(polarisation, axis=0)
 
 
 
@@ -224,7 +225,7 @@ ensemble_avg_opinion /= runs
 # DATA & PLOTS
 # -----------------------------
 
-output_folder = 'figures/temp-swarming'
+output_folder = 'figures/full-swarming'
 os.makedirs(output_folder, exist_ok=True)
 
 
@@ -240,7 +241,7 @@ ax.set_ylim(-1, 1)
 
 # ax.set_xscale('log')
 plt.tight_layout()
-output_file = os.path.join(output_folder, f"mean-opinion.svg")
+output_file = os.path.join(output_folder, f"case-4-mean_opinion.svg")
 plt.savefig(output_file)
 
 
@@ -257,81 +258,107 @@ ax.set_title("All opinions", fontweight="bold", fontsize=16)
 ax.set_xlabel("timestep", fontsize=14)
 ax.set_ylabel("opinion", fontsize=14)
 ax.set_xlim(1, steps)
-ax.set_ylim(-1, 1)
+ax.set_ylim(-1.05, 1.05)
 
 # ax.set_xscale('log')
 plt.tight_layout()
-output_file = os.path.join(output_folder, f"mean-all.svg")
+output_file = os.path.join(output_folder, f"case-4-mean_all-opinions.svg")
 plt.savefig(output_file)
 
 
-# PLOT: mean velocities over time
+# PLOT: velocity components over time
 
-# time_indices = np.arange(0, steps, 1000)
-# fig = plt.figure()
+fig, (ax1, ax2) = plt.subplots(
+    nrows=2, ncols=1,
+    figsize=(6, 5),
+    sharex=True,
+    constrained_layout=True
+)
+
+ax1.plot(range(1, steps+1), ensemble_velocity[:, 0], 'b-', linewidth=2)
+ax1.set_xlabel('timestep')
+ax1.set_ylabel('v_x')
+ax1.set_title('Mean velocity component v_x over time', fontweight='bold')
+ax1.grid(True)
+
+ax2.plot(range(1, steps+1), ensemble_velocity[:, 1], 'r-', linewidth=2)
+ax2.set_xlabel('timestep')
+ax2.set_ylabel('v_y')
+ax2.set_title('Mean velocity component v_y over time', fontweight='bold')
+ax2.grid(True)
+
+output_file = os.path.join(output_folder, 'case-4-mean_velocity-components.svg')
+fig.savefig(output_file)
+
+
+# # PLOT: mean velocities over time
+
+# timesteps_to_plot = np.arange(0, steps, 100)
+# v_means_subsampled = v_means[timesteps_to_plot]
+
+# x = v_means_subsampled[..., 0].flatten()
+# y = v_means_subsampled[..., 1].flatten()
+# z = np.repeat(timesteps_to_plot, v_means_subsampled.shape[1])
+
+# fig = plt.figure(figsize=(10, 6))
 # ax = fig.add_subplot(111, projection='3d')
-# for t in time_indices:
-#     ax.scatter(v[t, :, 0], v[t, :, 1], t, color='b', marker='o')
-#     ax.set_xlabel('X')
-# ax.set_ylabel('Y')
-# ax.set_zlabel('steps')
-# ax.set_title('Mean velocities over time')
-# plt.grid(True)
+# ax.scatter(x, y, z, c=z, cmap='viridis', marker='o', alpha=0.6)
 
-# output_file = os.path.join(output_folder, 'velocities_over_time.svg')
+# ax.set_xlabel('x')
+# ax.set_ylabel('y')
+# ax.set_zlabel('timestep')
+# plt.title('Mean velocities')
+# output_file = os.path.join(output_folder, f"case-4-mean_velocities.svg")
 # plt.savefig(output_file)
 
-timesteps_to_plot = np.arange(0, steps, 100)
-v_means_subsampled = v_means[timesteps_to_plot]
 
-x = v_means_subsampled[..., 0].flatten()
-y = v_means_subsampled[..., 1].flatten()
-z = np.repeat(timesteps_to_plot, v_means_subsampled.shape[1])
+# Plot mean quantities
 
-fig = plt.figure(figsize=(10, 6))
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(x, y, z, c=z, cmap='viridis', marker='o', alpha=0.6)
+fig, ax = plt.subplots(figsize=(5, 4))
+ax.plot(range(1, steps+1), polarisation_mean, 'k', label="Polarisation")
+ax.plot(range(1, steps+1), momentum_mean, 'r', label="Momentum")
+ax.set_title("Mean quantities over time", fontweight="bold", fontsize=16)
+ax.set_xlabel('timestep', fontsize=14)
+ax.set_ylabel('amount', fontsize=14)
+ax.set_xlim(1, steps)
+ax.set_ylim(-0.05, 1.05)
 
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('timestep')
-plt.title('Mean velocities')
-output_file = os.path.join(output_folder, f"mean-velocities.svg")
+plt.legend()
+
+output_file = os.path.join(output_folder, 'case-4-mean_quantities.svg')
 plt.savefig(output_file)
 
-# plt.show()
 
-
-# Plot polarisations
+# Plot all polarisations
 
 fig, ax = plt.subplots(figsize=(5, 4))
 for run in range(runs):
-    ax.plot(range(1, steps+1), pol[run], 'k', alpha=0.2)
+    ax.plot(range(1, steps+1), polarisation[run], 'k', alpha=0.25)
 ax.plot(range(1, steps+1), ensemble_avg_opinion, 'k')
-ax.set_title("Polarisation", fontweight="bold", fontsize=16)
+ax.set_title("All polarisations", fontweight="bold", fontsize=16)
 ax.set_xlabel("timestep", fontsize=14)
 ax.set_ylabel("amount", fontsize=14)
 ax.set_xlim(1, steps)
-# ax.set_ylim(-1, 1)
+ax.set_ylim(-0.05, 1.05)
 
 # ax.set_xscale('log')
 plt.tight_layout()
-output_file = os.path.join(output_folder, f"mean-polarisation.svg")
+output_file = os.path.join(output_folder, f"case-4-mean_all-polarisations.svg")
 plt.savefig(output_file)
 
 
-# Plot momentums
+# Plot all momentums
 
 fig, ax = plt.subplots(figsize=(5, 4))
 for run in range(runs):
-    ax.plot(range(1, steps+1), momentum[run], 'r', alpha=0.2)
-ax.set_title("Momentum", fontweight="bold", fontsize=16)
+    ax.plot(range(1, steps+1), momentum[run], 'r', alpha=0.25)
+ax.set_title("All momentums", fontweight="bold", fontsize=16)
 ax.set_xlabel("timestep", fontsize=14)
 ax.set_ylabel("amount", fontsize=14)
 ax.set_xlim(1, steps)
-# ax.set_ylim(-1, 1)
+ax.set_ylim(-0.05, 1.05)
 
 # ax.set_xscale('log')
 plt.tight_layout()
-output_file = os.path.join(output_folder, f"mean-momentum.svg")
+output_file = os.path.join(output_folder, f"case-4-mean_all-momentums.svg")
 plt.savefig(output_file)

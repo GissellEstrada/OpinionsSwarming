@@ -134,6 +134,7 @@ colors = {
 fig, axes = plt.subplots(1, 3, figsize=(8, 5))
 
 final_avg_lf = (np.sum(w_l[-1]) + np.sum(w_f[-1])) / (n_l + n_f)
+print(final_avg_lf)
 
 plot_opinions(axes[0], w_l, final_avg_lf, steps, dom, "Leaders", colors['red'], do_log=True)
 plot_opinions(axes[1], w_f, final_avg_lf, steps, dom, "Followers", colors['blue'], do_log=True)
