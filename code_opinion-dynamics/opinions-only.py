@@ -34,12 +34,12 @@ def plot_opinions(ax, data, final_avg_lf, steps, dom, title, color, do_log=False
 # SET PARAMETERS
 # -----------------------------
 
-t_final = 500                            # final time
+t_final = 5000                            # final time
 dt = 0.1                                # timestep
 steps = int(np.floor(t_final / dt))     # number of steps
 
-n_l = 5                                 # number of leaders. they prefer A
-n_f = 6                                 # number of followers. they prefer B
+n_l = 80                                 # number of leaders. they prefer A
+n_f = 80                                 # number of followers. they prefer B
 n_u = 10                                # number of uninformed. no preference
 
 dom = 1
@@ -82,6 +82,7 @@ sigma = 0                               # noise parameter
 w_l = np.zeros((steps, n_l))            # opinion vectors
 w_f = np.zeros((steps, n_f))
 w_u = np.zeros((steps, n_u))
+energy = np.zeros((steps,1))
 
 np.random.seed(1234)
 
@@ -113,13 +114,18 @@ for k in range(steps - 1):
     w_f[k+1] = w_f[k] + dt * dw_f
     w_u[k+1] = w_u[k] + dt * dw_u
 
+    energy[k+1] = (
+        0.5 * np.sum((w_l[k+1] - w_blue)**2)
+      + 0.5 * np.sum((w_f[k+1] - w_red)**2)
+    )
+
 
 
 # -----------------------------
 # PLOTS
 # -----------------------------
 
-output_folder = 'figures/opinions-only'
+output_folder = 'figures/aux'
 os.makedirs(output_folder, exist_ok=True)
 
 colors = {
@@ -143,6 +149,23 @@ plt.tight_layout()
 
 output_file = os.path.join(output_folder, 'example-1.svg')
 plt.savefig(output_file)
+
+
+# Plot: energy
+
+fig, ax = plt.subplots(figsize=(5, 4))
+
+ax.plot(range(1, steps+1), energy, 'k')
+ax.set_title('Energy over time', fontweight='bold', fontsize=16)
+ax.set_xlim([1,steps])
+ax.set_xlabel("Time")
+ax.set_ylabel("Energy")
+
+output_file = os.path.join(output_folder, 'energy.svg')
+plt.savefig(output_file)
+
+
+
 
 # plt.show()
 

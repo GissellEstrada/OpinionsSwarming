@@ -182,13 +182,17 @@ def simulate():
 # SIMULATION and AVERAGING
 # -----------------------------
 
-runs = 50
+runs = 100
 
 all_w = np.zeros((runs, steps, n))
 all_v_means = np.zeros((runs, steps, 2))
 ensemble_avg_opinion = np.zeros(steps)
 polarisation = np.zeros((runs, steps))
 momentum = np.zeros((runs, steps))
+
+n_top = 0
+n_bottom = 0
+n_mill = 0
 
 np.random.seed(1234)
 
@@ -214,6 +218,14 @@ for run in range(runs):
 
     momentum[run] = mom_numerator / mom_denominator 
 
+    mean_vx_final = all_v_means[run, -1, 0]
+    if mean_vx_final > 0.5:
+        n_top += 1
+    elif mean_vx_final < -0.5:
+        n_bottom += 1
+    else:
+        n_mill += 1
+
 ensemble_avg_opinion /= runs
 ensemble_velocity   = np.mean(all_v_means, axis=0)
 momentum_mean = np.mean(momentum, axis=0)
@@ -225,9 +237,26 @@ polarisation_mean = np.mean(polarisation, axis=0)
 # DATA & PLOTS
 # -----------------------------
 
-output_folder = 'figures/full-swarming'
+output_folder = 'figures/full-swarming-100'
 os.makedirs(output_folder, exist_ok=True)
 
+
+# Plot types of swarming
+
+labels = ['Top', 'Bottom', 'Mill']
+counts = [n_top, n_bottom, n_mill]
+colors = ['blue', 'red', 'black']
+
+plt.figure()
+plt.bar(labels, counts, color=colors)
+plt.title('Frequency of each type', fontweight="bold", fontsize=16)
+plt.xlabel('')
+plt.xticks(fontsize=14)
+plt.ylabel('runs', fontsize=14)
+
+plt.tight_layout()
+output_file = os.path.join(output_folder, f"case-4-mean_frequency.svg")
+plt.savefig(output_file)
 
 # Plot mean opinions
 

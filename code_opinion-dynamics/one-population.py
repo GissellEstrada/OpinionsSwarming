@@ -88,15 +88,15 @@ x = np.zeros((steps, n, 2))
 v = np.zeros((steps, n, 2))
 w = np.zeros((steps, n))
 
-# # Case II
-# alpha = 1
-# beta = 0.5
-# c_att = 50
-# l_att = 1
-# c_rep = 60
-# l_rep = 0.5
-# r_x = 1
-# r_w = 0.5
+# Case II
+alpha = 1
+beta = 0.5
+c_att = 50
+l_att = 1
+c_rep = 60
+l_rep = 0.5
+r_x = 1
+r_w = 0.5
 
 # Case VIII
 alpha = 1
@@ -105,11 +105,13 @@ c_att = 100
 l_att = 1.2
 c_rep = 350
 l_rep = 0.8
-r_x = 0.5
-r_w = 1
+r_x = 1
+r_w = 0.5
+# r_x = 0.5
+# r_w = 1
 
-tau_blue = 0
-tau_red = 0
+tau_blue = 0.1
+tau_red = 0.1
 
 nabla_u = lambda r: nabla_morse_potential(r, c_rep, c_att, l_rep, l_att)
 ode = lambda x_step, v_step, w_step: ode_system (x_step, v_step, w_step, n, alpha, beta, nabla_u, r_x, r_w, tau_red, tau_blue)
@@ -153,7 +155,7 @@ for i in range(1, steps-1):
 # PLOTS
 # --------------------------------------------------
 
-output_folder = 'figures/one-population'
+output_folder = 'figures/one-population-2'
 os.makedirs(output_folder, exist_ok=True)
 
 
@@ -171,7 +173,7 @@ plt.title('Velocities at the final time', fontsize=16, fontweight='bold')
 plt.axis('equal')
 plt.legend()
 
-output_file = os.path.join(output_folder, 'case-viii-a_velocity.svg')
+output_file = os.path.join(output_folder, 'case-ex_velocity-new.svg')
 plt.savefig(output_file)
 
 
@@ -186,7 +188,7 @@ plt.yticks(fontsize=12)
 plt.title('Opinion of each individual', fontsize=16, fontweight='bold')
 plt.grid(False)
 
-output_file = os.path.join(output_folder, 'case-viii-a_opinion.svg')
+output_file = os.path.join(output_folder, 'case-ex_opinion-new.svg')
 plt.savefig(output_file)
 
 
@@ -213,7 +215,7 @@ ax_ins.plot(range(steps), w, 'k', alpha=0.2)
 ax_ins.set_xticks([])
 ax_ins.set_yticks([])
 
-output_file = os.path.join(output_folder, 'case-viii-a.svg')
+output_file = os.path.join(output_folder, 'case-ex-new.svg')
 fig.savefig(output_file)
 
 
