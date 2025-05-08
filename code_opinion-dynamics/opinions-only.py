@@ -34,12 +34,12 @@ def plot_opinions(ax, data, final_avg_lf, steps, dom, title, color, do_log=False
 # SET PARAMETERS
 # -----------------------------
 
-t_final = 5000                            # final time
+t_final = 500                            # final time
 dt = 0.1                                # timestep
 steps = int(np.floor(t_final / dt))     # number of steps
 
-n_l = 80                                 # number of leaders. they prefer A
-n_f = 80                                 # number of followers. they prefer B
+n_l = 5                                 # number of leaders. they prefer A
+n_f = 6                                 # number of followers. they prefer B
 n_u = 10                                # number of uninformed. no preference
 
 dom = 1
@@ -93,6 +93,8 @@ w_u[0] = np.random.uniform(-dom, dom, n_u)
 # w_f[0] = np.random.uniform(-1, 0, n_f)
 # w_u[0] = np.random.uniform(-0.5, 0.5, n_u)
 
+if n_u == 0: n_u = 1
+
 for k in range(steps - 1):
     # opinions change after these interactions
     psi_ll = psi_sum(w_l[k], w_l[k], r_w)
@@ -118,9 +120,6 @@ for k in range(steps - 1):
         0.5 * np.sum((w_l[k+1] - w_blue)**2)
       + 0.5 * np.sum((w_f[k+1] - w_red)**2)
     )
-
-
-
 # -----------------------------
 # PLOTS
 # -----------------------------
